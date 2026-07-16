@@ -24,31 +24,15 @@ New content will be added regularly, so check back often!
 
 ---
 
-# 🗂️ Repository Structure
-
-```text
-📂 LearningUnit1
-📂 LearningUnit2
-📂 LearningUnit3
-📂 LearningUnit4
-
-📂 Demo Apps
-📂 Practical Activities
-📂 Resources
-📂 Assessment Support
-```
-
----
-
 # 🛠️ Software You'll Need
 
 Before getting started, make sure you have:
 
-- ✅ Android Studio (Latest Stable Version)
-- ✅ Java JDK
-- ✅ Git
-- ✅ GitHub Account
-- ✅ Android Device or Emulator
+-  Android Studio (Latest Stable Version)
+-  Java JDK
+-  Git
+-  GitHub Account
+-  Android Device or Emulator
 
 ---
 
@@ -56,18 +40,18 @@ Before getting started, make sure you have:
 
 During this module we'll explore topics including:
 
-- 🌐 REST APIs
-- 📡 HTTP Requests
-- 📦 JSON
-- 🔄 Retrofit
-- 🧩 Fragments
-- 📚 External Libraries
-- 📍 Google Maps & Location Services
-- 🔑 Authentication
-- 🗄️ Databases
-- ☁️ Cloud Services
-- 🧪 Unit Testing
-- ⚙️ GitHub Actions
+-  REST APIs
+-  HTTP Requests
+-  JSON
+-  Retrofit
+-  Fragments
+-  External Libraries
+-  Google Maps & Location Services
+-  Authentication
+-  Databases
+-  Cloud Services
+-  Unit Testing
+-  GitHub Actions
 - 🚀 Google Play Store Deployment
 
 ---
@@ -78,18 +62,18 @@ To get the most out of this repository:
 
 1. Attend your lectures.
 2. Work through the module manual and activities.
-3. Review the relevant demo project.
+3. Review the relevant projects.
 4. Build the example yourself.
 5. Experiment by making changes.
 6. Apply what you've learned to your own project.
 
-Learning happens by **building**, not by copying.
+Learning happens by **building**, not by **copying**.
 
 ---
 
 # 🎓 Semester Project
 
-Throughout the semester you'll be developing your own business-oriented Android application.
+Throughout the semester you'll be developing your own Android application for your POE.
 
 This repository is intended to help you understand the technologies required for your project, including:
 
@@ -122,17 +106,17 @@ Please use this repository responsibly.
 
 You are encouraged to:
 
-- ✅ Learn from the examples
-- ✅ Experiment with the code
-- ✅ Build upon the concepts
+-  Learn from the examples
+-  Experiment with the code
+-  Build upon the concepts
 
 You should **not**:
 
-- ❌ Copy code directly into your assessments without understanding it
-- ❌ Submit someone else's work as your own
-- ❌ Ignore referencing requirements when using external resources
+-  Copy code directly into your assessments without understanding it
+-  Submit someone else's work as your own
+-  Ignore referencing requirements when using external resources
 
-Always follow The IIE's Academic Integrity Policy and cite external resources where required.
+**Always follow The IIE's Academic Integrity Policy and cite external resources where required.**
 
 ---
 
@@ -146,7 +130,7 @@ If you're stuck:
 - Read any error messages carefully.
 - Ask questions during class or on the module discussion forum.
 
-Remember: every developer gets stuck sometimes—the important part is learning how to work through it.
+> Remember: every developer gets stuck sometimes—the important part is learning how to work through it.
 
 ---
 
