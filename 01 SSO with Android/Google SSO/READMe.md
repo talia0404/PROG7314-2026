@@ -608,6 +608,94 @@ Once Firebase sign-out is complete:
 
 The application’s UI should immediately reflect the authentication state.
 
+```kotlin
+
+
+@Composable
+fun SignedOutScreen(
+    modifier: Modifier = Modifier,
+    isLoading: Boolean,
+    errorMessage: String?,
+    onSignInClick: () -> Unit
+) {
+
+    //create the screen
+    /*
+    - title
+    - description
+    - google sign in button
+    - loading indicator
+    - error message
+     */
+
+    /*
+      A Column arranges all children vertically.
+     */
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .padding(24.dp),
+
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+
+        /*
+         Main screen heading.
+         */
+        Text(
+            text = "Google Authentication",
+            style = MaterialTheme.typography.headlineMedium
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        /*
+         Brief instructions for the user.
+         */
+        Text(
+            text = "Sign in using your Google account to continue.",
+            style = MaterialTheme.typography.bodyMedium
+        )
+
+        Spacer(modifier = Modifier.height(32.dp))
+
+        /*
+         If authentication is currently running, display a loading spinner.
+         Otherwise display the Google sign-in button.
+         */
+        if (isLoading) {
+
+            CircularProgressIndicator()
+
+        } else {
+
+            Button(
+                onClick = onSignInClick
+            ) {
+
+                Text("Sign in with Google")
+
+            }
+        }
+
+        /*
+         Only display the error section when an error exists.
+         */
+        if (errorMessage != null) {
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            Text(
+                text = errorMessage,
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodyMedium
+            )
+        }
+    }
+}
+```
+
 ---
 
 # 🧹 Step 24: Clear the Credential State When Appropriate
