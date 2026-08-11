@@ -1978,7 +1978,7 @@ If the last known location is still null:
 Try searching for:
 
 ```text
-Gateway Theatre of Shopping
+Emeris - Durban Westville Campus
 ```
 
 Expected flow:
@@ -2139,47 +2139,6 @@ Do not:
 * Store location history unnecessarily
 
 The app should continue allowing place search even if the user refuses device-location permission.
-
----
-
-# ✅ 52. Completion Checklist
-
-Before considering the project complete, confirm that:
-
-* Google Cloud project exists
-* Billing is connected
-* Maps SDK for Android is enabled
-* Places API (New) is enabled
-* API key was created
-* API key is Android-restricted
-* Package name is correct
-* SHA-1 was added
-* Secrets Gradle Plugin is configured
-* API key exists in `local.properties`
-* Maps Compose dependency is added
-* Location dependency is added
-* Places dependency is added
-* Internet permission exists
-* Coarse location permission exists
-* Fine location permission exists
-* Maps API key metadata exists
-* Fused Location Provider was initialised
-* Places SDK was initialised
-* Places client was created
-* Existing permission is checked
-* Runtime permission request works
-* Current location is retrieved
-* Google Map displays
-* Search field works
-* Search request works
-* Search result coordinates are stored
-* Search-result name and address display
-* Current-location marker displays
-* Search-result marker displays
-* Camera moves to current location
-* Camera moves to searched location
-* Errors are handled
-* Loading state is handled
 
 ---
 
