@@ -1,4 +1,3 @@
-````markdown
 # 🏗️ Step 01 — Project and API Setup
 
 ## 📚 What You Are Building
