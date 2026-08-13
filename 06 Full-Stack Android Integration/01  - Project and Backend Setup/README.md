@@ -2,33 +2,35 @@
 
 ## 📚 What You Are Building
 
-In this first step, you will create the foundation of the **ParkSmart** system.
+Welcome to the first development step of **ParkSmart**.
 
-You are **not building the complete application yet**.
+Before we can add authentication, parking data, reservations or QR codes, we need to create the foundation of the system.
 
-The purpose of this step is to make sure that:
+In this step, you will create and configure:
 
-- Your Android project is ready.
-- Your backend project is ready.
-- Your Node.js server can run.
-- Your Express API can receive requests.
-- Your API can return JSON responses.
-- Your project has a clear structure that can grow as more features are added.
-- Sensitive and generated files are not committed to GitHub.
+- The ParkSmart Android application.
+- The ParkSmart Node.js backend.
+- An Express REST API.
+- A structured backend project.
+- Environment configuration.
+- Git ignore rules.
+- A simple API endpoint for testing.
 
-By the end of this step, the basic structure will be:
+At the end of this step, you should have:
 
 ```text
-ParkSmart
-│
-├── Android Application
-│
-└── REST API
+Android Application
+        +
+Node.js / Express API
+        +
+Working Test Endpoint
 ```
 
-The API will not connect to a database yet.
+You are **not** connecting Android to the API yet.
 
-MongoDB and persistent data storage will be introduced in **Step 02**.
+You are also **not** adding a database yet.
+
+Those features will be introduced in later steps.
 
 ---
 
@@ -36,126 +38,271 @@ MongoDB and persistent data storage will be introduced in **Step 02**.
 
 After completing this step, you should be able to:
 
-- Explain the purpose of a REST API in a mobile application.
-- Explain the role of Node.js.
+- Explain the purpose of a REST API.
+- Explain the role of Node.js in ParkSmart.
 - Explain the purpose of Express.
-- Create a Node.js project using npm.
-- Install and manage Node.js packages.
+- Explain the difference between the Android application and the backend API.
+- Create a Node.js project.
+- Understand the purpose of `package.json`.
+- Install and manage npm packages.
 - Create an Express application.
-- Create a basic REST endpoint.
-- Understand the difference between an HTTP request and response.
-- Return JSON from an API.
-- Test API endpoints independently from Android.
+- Create a simple API endpoint.
+- Understand basic HTTP methods.
 - Organise a backend project into logical folders.
-- Use environment variables for configuration.
-- Protect sensitive and generated files using `.gitignore`.
+- Use environment variables for application configuration.
+- Use `.gitignore` to prevent unnecessary or private files from being committed.
+- Run and test a local REST API.
 
 ---
 
-# 🧠 1. Understand the ParkSmart Architecture
+# 🧠 1. Understand What You Are Creating
 
-ParkSmart will eventually contain three major components:
+ParkSmart will eventually consist of several technologies working together.
 
-```text
-📱 Android Application
-          ↓
-🌐 REST API
-          ↓
-🍃 MongoDB Database
-```
-
-However, we are **not implementing all three components in this step**.
-
-For now, we are focusing on:
+The final architecture will resemble:
 
 ```text
-📱 Android Application
-
-        +
-
-🌐 REST API
+Android Application
+        ->
+REST API
+        ->
+Database
 ```
 
-The database will be added later.
+For now, we are only concerned with:
+
+```text
+Android Application
+
+and
+
+REST API
+```
+
+These are **two separate applications**.
 
 ---
 
-## 📱 What Is the Android Application Responsible For?
+## 📱 Android Application
 
-The Android application is the part of ParkSmart that the user interacts with.
+The Android application is the client.
 
 It will eventually be responsible for:
 
-- Displaying screens.
+- Displaying the ParkSmart interface.
 - Collecting user input.
 - Signing users in.
 - Displaying parking areas.
 - Displaying available parking bays.
-- Allowing drivers to create reservations.
+- Sending reservation requests.
 - Displaying QR parking passes.
-- Allowing managers to scan QR codes.
+- Scanning QR codes.
 
-However, the Android application should **not contain all of the application's business logic**.
+The Android application will be developed using:
 
-It also should not communicate directly with the database.
+```text
+Kotlin
++
+Jetpack Compose
+```
 
 ---
 
-## 🌐 What Is the REST API Responsible For?
+## 🌐 REST API
 
-The REST API sits between the Android application and the application's data.
+The REST API is the backend of ParkSmart.
 
-Later, the architecture will become:
+It will eventually be responsible for:
+
+- Receiving requests from Android.
+- Authenticating users.
+- Authorising actions.
+- Validating data.
+- Retrieving data.
+- Creating reservations.
+- Checking parking availability.
+- Preventing conflicting reservations.
+- Validating QR parking passes.
+- Communicating with the database.
+
+For this project, the API will be developed using:
+
+```text
+Node.js
++
+Express
+```
+
+---
+
+# 🤔 2. Why Do We Need an API?
+
+It might be tempting to place everything inside the Android application.
+
+For example:
 
 ```text
 Android
-   ↓
-REST API
-   ↓
-MongoDB
+        ->
+Database
 ```
 
-The API will eventually be responsible for:
+However, this would give the Android client too much responsibility.
 
-- Receiving requests from Android.
-- Validating data.
-- Authenticating users.
-- Authorising actions.
-- Applying ParkSmart business rules.
-- Reading data from MongoDB.
-- Saving data to MongoDB.
-- Checking parking availability.
-- Creating reservations.
-- Validating QR parking passes.
-
-For now, we only need to prove that the API can:
+Instead, ParkSmart will use:
 
 ```text
-Receive Request
-      ↓
-Process Request
-      ↓
-Return Response
+Android
+        ->
+API
+        ->
+Database
 ```
+
+The API acts as the controlled middle layer between the mobile application and the application's data.
+
+Later, when a driver attempts to reserve a parking bay, Android might send a request similar to:
+
+```text
+POST /api/reservations
+```
+
+The API will then be responsible for deciding whether that request is actually valid.
+
+For example, it may need to check:
+
+- Is the user authenticated?
+- Does the parking area exist?
+- Does the parking bay exist?
+- Is the parking bay active?
+- Is the requested time valid?
+- Is another reservation already using the bay?
+- Is the user allowed to perform this action?
+
+The Android application requests an action.
+
+The API decides whether that action should be allowed.
 
 ---
 
-# 🟢 2. Check That Node.js Is Installed
+# 🌐 3. Understand REST APIs
 
-ParkSmart's backend will use **Node.js**.
+A REST API exposes **endpoints** that clients can send requests to.
 
-Node.js allows JavaScript to run outside of a web browser.
+An endpoint consists of:
 
-This means JavaScript can be used to create applications such as:
+```text
+HTTP Method + Path
+```
 
-- Web servers.
-- REST APIs.
-- Command-line applications.
-- Backend services.
+For example:
 
-Check whether Node.js is already installed.
+```text
+GET /api/parking-areas
+```
 
-Open a terminal and run:
+The HTTP method describes the type of action being requested.
+
+Common HTTP methods include:
+
+| Method | Typical Purpose |
+|---|---|
+| `GET` | Retrieve data |
+| `POST` | Create new data |
+| `PUT` | Replace or update data |
+| `PATCH` | Partially update data |
+| `DELETE` | Remove data |
+
+ParkSmart will eventually contain endpoints such as:
+
+```text
+GET /api/parking-areas
+
+GET /api/parking-areas/:id
+
+POST /api/reservations
+
+GET /api/reservations/my
+
+PATCH /api/reservations/:id/cancel
+```
+
+You are **not creating these endpoints yet**.
+
+In this step, you will create only a simple test endpoint to prove that the API is working.
+
+---
+
+# 🧰 4. Software You Will Need
+
+Before starting, make sure you have the following installed.
+
+## Android Development
+
+You should already have:
+
+- Android Studio.
+- Android SDK.
+- An Android emulator or physical Android device.
+- Git.
+
+## Backend Development
+
+You will need:
+
+- Node.js.
+- npm.
+- Visual Studio Code.
+- A web browser.
+- An API testing tool.
+
+You may use an API testing tool such as:
+
+- Postman.
+- Bruno.
+- Insomnia.
+- Thunder Client for VS Code.
+
+You only need **one** API testing tool.
+
+---
+
+# 🟢 5. Install Node.js
+
+Node.js allows JavaScript to execute outside a web browser.
+
+In ParkSmart, Node.js will run our backend application.
+
+Download Node.js from the official website:
+
+**Node.js Downloads:**  
+https://nodejs.org/en/download
+
+Use an **LTS release** unless instructed otherwise.
+
+LTS stands for:
+
+```text
+Long-Term Support
+```
+
+These releases are generally preferred for projects where stability is important.
+
+---
+
+## Verify the Installation
+
+After installing Node.js, close and reopen your terminal.
+
+Open:
+
+```text
+PowerShell
+```
+
+or the terminal inside VS Code.
+
+Run:
 
 ```powershell
 node --version
@@ -163,7 +310,13 @@ node --version
 
 You should receive a version number.
 
-Then check npm:
+For example:
+
+```text
+vXX.XX.X
+```
+
+Then run:
 
 ```powershell
 npm --version
@@ -171,94 +324,82 @@ npm --version
 
 You should also receive a version number.
 
+If both commands work, Node.js and npm are available on your computer.
+
 ---
 
-## 📦 What Is npm?
+# 📦 6. Understand npm
 
-**npm** is the package manager used by Node.js.
+Node.js includes **npm**, the Node Package Manager.
 
-Instead of manually downloading libraries, npm allows us to install them using commands.
+npm allows us to install libraries created by other developers.
+
+Instead of writing an entire web server framework ourselves, we can install Express.
+
+Later, we will install additional packages for features such as:
+
+```text
+Database communication
+
+Authentication
+
+Security
+
+Testing
+```
+
+npm also records the packages required by the project so that another developer can install the same dependencies.
+
+---
+
+# 📂 7. Create the ParkSmart Project
+
+Create a main folder for the project.
 
 For example:
 
-```powershell
-npm install express
+```text
+ParkSmart/
 ```
 
-npm will also keep track of the packages required by the project.
+Your project will eventually contain separate areas for the Android application and backend API.
 
----
-
-## 📥 If Node.js Is Not Installed
-
-Download an **LTS version** of Node.js from:
-
-**Node.js — Download**
-
-https://nodejs.org/en/download
-
-After installing Node.js:
-
-1. Close your terminal.
-2. Open a new terminal.
-3. Run:
-
-```powershell
-node --version
-```
-
-4. Run:
-
-```powershell
-npm --version
-```
-
-Both commands must work before continuing.
-
-### 📚 Helpful Resource
-
-**Node.js — Introduction to Node.js**
-
-https://nodejs.org/en/learn/getting-started/introduction-to-nodejs
-
----
-
-# 📁 3. Prepare Your ParkSmart Projects
-
-ParkSmart contains two separate applications:
+A suitable structure is:
 
 ```text
-ParkSmart
-│
-├── Android Application
-│
-└── Backend API
+ParkSmart/
+|
+|-- android/
+|
+|-- api/
+|
+|-- README.md
+|
+|-- .gitignore
 ```
 
-Even though these applications work together, they perform different jobs.
-
-You will work on both throughout this activity.
+The exact location of the repository on your computer is your choice.
 
 ---
 
-# 📱 4. Create the Android Project
+# 📱 8. Create the Android Project
 
-Open **Android Studio**.
+Open Android Studio.
 
-Create a new project:
+Select:
 
 ```text
 New Project
-→ Empty Activity
+-> Empty Activity
 ```
 
-Configure the project appropriately.
+Create your ParkSmart Android application.
 
 Suggested configuration:
 
 ```text
 Name:
-ParkSmart
+ParkSmartAndroid
 
 Language:
 Kotlin
@@ -270,7 +411,7 @@ Minimum SDK:
 API 24 or later
 ```
 
-Choose an appropriate unique package name.
+Choose an appropriate package name for your project.
 
 For example:
 
@@ -278,292 +419,289 @@ For example:
 com.yourname.parksmart
 ```
 
-Do not simply copy another student's package name.
+Do not use another student's package name.
 
 ---
 
-## ▶️ Test the Android Project
+## Run the Android Application
 
-Before doing anything else to the Android project:
+Allow Android Studio to complete the Gradle Sync.
 
-1. Allow Gradle to finish syncing.
-2. Select an emulator or physical Android device.
-3. Run the application.
-4. Confirm that the default application opens.
+Then run the application using:
 
-You are **not required to build the ParkSmart interface yet**.
+- An Android emulator, or
+- A physical Android device.
 
-The purpose of this check is simply to confirm that the Android project works before additional functionality is introduced.
+You do not need to build the ParkSmart interface yet.
 
-### ✅ Android Checkpoint
-
-Before continuing:
-
-- [ ] The Android project exists.
-- [ ] Gradle Sync completes successfully.
-- [ ] The project builds.
-- [ ] The application launches.
-- [ ] There are no unresolved project configuration errors.
-
----
-
-# 🌐 5. Create the Backend API Project
-
-Now create a separate folder for the ParkSmart API.
-
-For example:
+At this stage, you are only confirming that:
 
 ```text
-ParkSmartAPI
+Project created
+        ->
+Gradle builds
+        ->
+Application launches
 ```
 
-Open this folder in **Visual Studio Code**.
+---
+
+## ✅ Android Checkpoint
+
+Before continuing, confirm:
+
+- [ ] The Android project has been created.
+- [ ] Gradle Sync completes successfully.
+- [ ] The application builds.
+- [ ] The application launches.
+- [ ] There are no unresolved build errors.
+
+Do not spend time designing the ParkSmart interface yet.
+
+---
+
+# 🌐 9. Create the Backend Project
+
+Now create the backend application.
+
+Navigate to:
+
+```text
+ParkSmart/api/
+```
+
+Open this folder in Visual Studio Code.
+
+Your VS Code workspace should currently be almost empty.
 
 Open the integrated terminal:
 
 ```text
 Terminal
-→ New Terminal
+-> New Terminal
 ```
 
-Make sure the terminal is currently inside your API project folder.
+Make sure the terminal is inside the `api` folder.
 
-You can check the current location using:
+You can check the current directory using:
 
 ```powershell
 pwd
 ```
 
-or inspect the path displayed in the terminal.
-
 ---
 
-# 📦 6. Initialise the Node.js Project
+# 📦 10. Initialise the Node.js Project
 
-Inside the API folder, run:
+Inside the `api` folder, run:
 
 ```powershell
 npm init -y
 ```
 
-This creates:
+This initialises a Node.js project.
+
+The `-y` option accepts the default values automatically.
+
+After running the command, a new file should appear:
 
 ```text
 package.json
 ```
 
-Your project should now contain:
-
-```text
-ParkSmartAPI/
-│
-└── package.json
-```
+The official npm documentation describes `npm init` as the command used to create or initialise a package.  
+https://docs.npmjs.com/cli/commands/npm-init
 
 ---
 
-# 📄 7. Understand `package.json`
+# 📄 11. Understand `package.json`
+
+Open:
+
+```text
+package.json
+```
+
+Do not immediately start changing everything inside it.
+
+First understand what the file represents.
 
 `package.json` describes your Node.js project.
 
-Open it and inspect its contents.
+It can contain information such as:
 
-It contains information such as:
-
-- Project name.
-- Version.
-- Scripts.
-- Dependencies.
-- Development dependencies.
-
-As packages are installed, npm records them here.
-
-This means another developer does not need you to send them every installed package manually.
-
-They can clone the project and later run:
-
-```powershell
-npm install
+```text
+Project name
+Project version
+Entry point
+Scripts
+Dependencies
+Development dependencies
 ```
 
-npm reads `package.json` and installs the required dependencies.
+As you install packages, npm will update this file.
 
-### 📚 Helpful Resource
+This means another developer does not need you to send them every installed library manually.
 
-**npm — package.json**
-
-https://docs.npmjs.com/cli/configuring-npm/package-json
+They can clone your project and use the information in `package.json` to install the required packages.
 
 ---
 
-# 🌐 8. Install Express
+# 📦 12. Install Express
 
-ParkSmart will use **Express** to create the REST API.
+ParkSmart will use **Express** as its web framework.
 
-Run:
+Express provides functionality for:
+
+- Creating the web server.
+- Defining routes.
+- Receiving HTTP requests.
+- Returning HTTP responses.
+- Processing JSON.
+- Using middleware.
+
+Install Express by running:
 
 ```powershell
 npm install express
 ```
 
-After installation, inspect your project.
+The official Express installation guide uses npm to install Express into a Node project.
 
-You should notice:
+**Express Installation:**  
+https://expressjs.com/en/starter/installing.html
+
+---
+
+# 🔍 13. Check What npm Created
+
+After installing Express, examine the `api` folder.
+
+You should now see:
 
 ```text
-node_modules/
-package.json
+api/
+|
+|-- node_modules/
+|
+|-- package-lock.json
+|
+|-- package.json
+```
+
+Each item has a different purpose.
+
+---
+
+## `package.json`
+
+Describes your application and lists its dependencies.
+
+---
+
+## `package-lock.json`
+
+Records the exact dependency versions installed for the project.
+
+This helps developers install consistent dependency versions.
+
+You should normally commit:
+
+```text
 package-lock.json
 ```
 
----
-
-## 🧠 What Is Express?
-
-Node.js gives us the ability to run JavaScript on the server.
-
-Express provides tools that make building web servers and APIs easier.
-
-Express helps us handle things such as:
-
-```text
-GET requests
-POST requests
-PUT requests
-PATCH requests
-DELETE requests
-Routes
-Request bodies
-Responses
-Middleware
-```
-
-For example, ParkSmart will eventually have endpoints resembling:
-
-```text
-GET /api/parking-areas
-
-GET /api/reservations
-
-POST /api/reservations
-
-PATCH /api/reservations/:id/cancel
-```
-
-You are **not creating these endpoints yet**.
-
-### 📚 Helpful Resources
-
-**Express — Getting Started**
-
-https://expressjs.com/en/starter/installing.html
-
-**Express — Basic Routing**
-
-https://expressjs.com/en/starter/basic-routing.html
-
-**Express — Routing Guide**
-
-https://expressjs.com/en/guide/routing.html
+to Git.
 
 ---
 
-# 🔄 9. Install Nodemon
+## `node_modules/`
 
-During development, you will frequently modify your backend files.
+Contains the actual installed packages.
 
-Normally, after changing your code, you would need to:
+This folder can become very large.
+
+You should **not** commit:
 
 ```text
-Change Code
-    ↓
-Stop Server
-    ↓
-Start Server Again
+node_modules/
 ```
 
-Nodemon can automatically restart the server when your files change.
+to GitHub.
 
-Install it as a development dependency:
+Another developer can recreate it using:
+
+```powershell
+npm install
+```
+
+This is why `package.json` and `package-lock.json` are important.
+
+---
+
+# ⚡ 14. Install Nodemon
+
+During development, you will frequently change backend files.
+
+Normally, after changing the server code, you may need to stop and restart Node.
+
+For example:
+
+```text
+Edit code
+-> Save
+-> Stop server
+-> Start server again
+```
+
+Nodemon makes this easier.
+
+It watches your project for changes and automatically restarts the Node application.
+
+Install Nodemon as a **development dependency**:
 
 ```powershell
 npm install --save-dev nodemon
 ```
 
----
+The `--save-dev` option tells npm that Nodemon is a development tool rather than a package required by the production application itself.
 
-## 🧠 Why Is It a Development Dependency?
+After installation, examine `package.json`.
 
-Nodemon helps us **develop** the application.
-
-The finished API does not require Nodemon to perform its actual job.
-
-This is why it is installed using:
+You should now see a distinction between:
 
 ```text
---save-dev
+dependencies
 ```
 
-Open `package.json`.
+and:
 
-You should now see Express and Nodemon recorded separately under the appropriate dependency sections.
-
-### 📚 Helpful Resource
-
-**Nodemon**
-
-https://www.npmjs.com/package/nodemon
+```text
+devDependencies
+```
 
 ---
 
-# 🔐 10. Install dotenv
+# 📁 15. Create the Backend Folder Structure
 
-Install:
-
-```powershell
-npm install dotenv
-```
-
-`dotenv` allows the application to load configuration values from a `.env` file.
-
-Later, ParkSmart will contain configuration values such as:
+Create a folder called:
 
 ```text
-PORT
-MongoDB connection information
-Firebase configuration
+src
 ```
 
-These values should not be scattered throughout your source code.
-
-We will configure the `.env` file later in this step.
-
-### 📚 Helpful Resource
-
-**dotenv**
-
-https://www.npmjs.com/package/dotenv
-
----
-
-# 📁 11. Create the Backend Folder Structure
-
-Inside the API project, create:
-
-```text
-src/
-```
+inside the `api` project.
 
 Inside `src`, create the following folders:
 
 ```text
-config/
-controllers/
-middleware/
-models/
-routes/
-services/
-utils/
+config
+controllers
+middleware
+models
+routes
+services
+utils
 ```
 
 Also create:
@@ -573,168 +711,192 @@ app.js
 server.js
 ```
 
-Your structure should now resemble:
+Your backend should now resemble:
 
 ```text
-ParkSmartAPI/
-│
-├── src/
-│   │
-│   ├── config/
-│   ├── controllers/
-│   ├── middleware/
-│   ├── models/
-│   ├── routes/
-│   ├── services/
-│   ├── utils/
-│   │
-│   ├── app.js
-│   └── server.js
-│
-├── node_modules/
-├── package.json
-└── package-lock.json
+api/
+|
+|-- src/
+|   |
+|   |-- config/
+|   |
+|   |-- controllers/
+|   |
+|   |-- middleware/
+|   |
+|   |-- models/
+|   |
+|   |-- routes/
+|   |
+|   |-- services/
+|   |
+|   |-- utils/
+|   |
+|   |-- app.js
+|   |
+|   |-- server.js
+|
+|-- node_modules/
+|
+|-- package-lock.json
+|
+|-- package.json
 ```
 
-Some of these folders will remain empty during Step 01.
+Some folders will remain empty during Step 01.
 
-That is expected.
+That is completely fine.
 
-They are being created now so that the API has a clear structure as it grows.
+They will be used as ParkSmart grows.
 
 ---
 
-# 🧠 12. Understand the Backend Structure
+# 🧠 16. Understand the Backend Structure
 
-Do not create folders without understanding why they exist.
+Before adding anything else, understand why these folders exist.
+
+The aim is to avoid building the entire backend inside one enormous file.
 
 ---
 
 ## ⚙️ `config/`
 
-This folder will contain configuration code.
+Contains configuration code.
 
-Later this may include:
+Later, this may contain configuration for:
 
 ```text
-MongoDB connection
-Firebase Admin configuration
+MongoDB
+
+Firebase Admin
 ```
 
 ---
 
-## 🛣️ `routes/`
+## 🧭 `routes/`
 
-Routes define the endpoints that clients can access.
+Defines the API endpoints available to clients.
 
-For example:
+For example, later you may have routes relating to:
 
 ```text
-GET /api/parking-areas
+Users
+
+Parking Areas
+
+Parking Bays
+
+Reservations
 ```
 
-A route helps determine what should happen when a particular request reaches the API.
+A route determines which part of the application should handle a particular request.
 
 ---
 
 ## 🎮 `controllers/`
 
-Controllers receive requests and coordinate the response.
+Controllers receive requests and coordinate the appropriate response.
 
-A simplified flow might be:
+A typical flow will eventually look like:
 
 ```text
 Request
-   ↓
-Route
-   ↓
-Controller
-   ↓
-Response
+-> Route
+-> Controller
+-> Response
 ```
 
-As ParkSmart becomes more complicated, controllers will work with other parts of the application.
+As ParkSmart becomes more complicated, controllers may also call services.
 
 ---
 
 ## 🧠 `services/`
 
-Services are useful for separating business logic from HTTP request-handling code.
+Services contain more complex application and business logic.
 
-Later, ParkSmart may need to perform logic such as:
+For example, reservation creation will eventually require several checks.
+
+Rather than putting all of this inside the route, the application can separate the responsibilities.
+
+A later flow may resemble:
 
 ```text
-Receive Reservation Request
-          ↓
-Validate Parking Area
-          ↓
-Validate Parking Bay
-          ↓
-Check Date and Time
-          ↓
-Check Availability
-          ↓
-Create Reservation
+Request
+-> Route
+-> Controller
+-> Service
+-> Database
 ```
-
-We do not want all of that logic sitting directly inside a route.
 
 ---
 
 ## 🛡️ `middleware/`
 
-Middleware contains functions that can run while an HTTP request is being processed.
+Middleware runs during the request/response process.
 
-Later, middleware will help with:
+Later, ParkSmart will use middleware for features such as:
 
 ```text
 Authentication
+
 Authorisation
+
 Error handling
-Request processing
 ```
+
+You do not need to implement these features yet.
 
 ---
 
 ## 📦 `models/`
 
-Models will later represent the structure of the data stored in MongoDB.
+Models will eventually describe the data stored by ParkSmart.
 
-Do not create any ParkSmart models yet.
+We are **not creating the models in Step 01**.
 
-MongoDB and models will be covered in **Step 02**.
+MongoDB and Mongoose will be introduced in Step 02.
+
+Leave this folder empty for now.
 
 ---
 
 ## 🧰 `utils/`
 
-This folder can contain reusable helper functionality that does not clearly belong to another layer.
+Contains reusable utility/helper functionality that does not naturally belong to another layer.
+
+Do not place random code here simply because you are unsure where it belongs.
 
 ---
 
 ## 🌐 `app.js`
 
-`app.js` will configure the Express application.
+This file will configure the Express application.
 
-It is responsible for things such as:
+It will eventually be responsible for tasks such as:
 
 ```text
-Creating Express
-Configuring middleware
-Registering routes
+Create Express application
+
+Configure middleware
+
+Configure JSON processing
+
+Register routes
 ```
 
 ---
 
 ## ▶️ `server.js`
 
-`server.js` is responsible for starting the application.
+This file is responsible for starting the application.
 
-Separating the Express configuration from server startup will also make the application easier to test later.
+Separating application configuration from server startup also makes the project easier to test and maintain later.
 
 ---
 
-# 🌐 13. Create the Express Application
+# 🌐 17. Create the Express Application
+
+You are now ready to create the first version of the ParkSmart API.
 
 Open:
 
@@ -742,187 +904,108 @@ Open:
 src/app.js
 ```
 
-Your first task is to create the Express application.
+Your task is to configure a basic Express application.
 
 You need to research and implement the following:
 
-1. Import Express.
+1. Import the Express package.
 2. Create an Express application.
-3. Configure Express to understand JSON request bodies.
-4. Export the Express application so that `server.js` can use it.
+3. Configure the application to accept JSON request bodies.
+4. Create a basic test endpoint.
+5. Export the Express application so that `server.js` can use it.
 
-You will need to investigate:
-
-```text
-express()
-express.json()
-module.exports
-```
-
-or the equivalent syntax if you have configured your project to use ES modules.
-
-> ⚠️ Choose one module system and use it consistently. Do not randomly mix `require()` and `import` syntax.
-
-### 📚 Resources
-
-**Express — Using Middleware**
-
-https://expressjs.com/en/guide/using-middleware.html
-
-**Express API Reference**
-
-https://expressjs.com/en/api.html
-
-Look specifically at:
+Your test endpoint should use:
 
 ```text
-express()
-express.json()
-```
-
----
-
-# 🧪 14. Create Your First Endpoint
-
-Before connecting Android, Firebase or a database, prove that your API works independently.
-
-Create a simple endpoint:
-
-```text
-GET /api/test
-```
-
-When the endpoint receives a GET request, it should return JSON.
-
-For example:
-
-```json
-{
-  "message": "ParkSmart API is running"
-}
-```
-
----
-
-## 🧠 What Is an Endpoint?
-
-An endpoint is a specific location exposed by an API.
-
-It normally combines:
-
-```text
-HTTP Method + Path
-```
-
-For example:
-
-```text
-GET + /api/test
-```
-
-Later:
-
-```text
-GET + /api/parking-areas
-
-POST + /api/reservations
-```
-
-These are different endpoints because they represent different operations.
-
----
-
-# 📥 15. Understand the Request
-
-When you access:
-
-```text
-GET /api/test
-```
-
-you are sending an **HTTP request** to the API.
-
-A request can contain information such as:
-
-```text
-HTTP method
-URL
-Headers
-Parameters
-Query values
-Request body
-```
-
-Not every request uses all of these.
-
-For your first endpoint, the important parts are:
-
-```text
-Method:
 GET
+```
 
-Path:
+and should be available at:
+
+```text
 /api/test
 ```
 
----
+When the endpoint is requested, return a simple JSON response indicating that the ParkSmart API is running.
 
-# 📤 16. Understand the Response
-
-The API processes the request and sends an HTTP response.
-
-A response can contain:
+For example, the response could conceptually contain:
 
 ```text
-Status code
-Headers
-Body
+message:
+ParkSmart API is running
 ```
 
-Your response body will contain JSON.
+> ⚠️ You are expected to implement this yourself. Use the resources below to determine how Express applications, routes and responses work.
 
-For example:
+### 📚 Resources
 
-```json
-{
-  "message": "ParkSmart API is running"
-}
+**Express — Hello World:**  
+https://expressjs.com/en/starter/hello-world.html
+
+**Express — Basic Routing:**  
+https://expressjs.com/en/starter/basic-routing.html
+
+**Express — Routing Guide:**  
+https://expressjs.com/en/guide/routing.html
+
+Pay particular attention to:
+
+```text
+express()
+
+express.json()
+
+app.use()
+
+app.get()
+
+request
+
+response
 ```
 
 ---
 
-# 🔢 17. Understand HTTP Status Codes
+# 🧠 18. Understand the Test Endpoint
 
-HTTP status codes communicate the outcome of a request.
+Your test endpoint has an important purpose.
 
-You will use these throughout ParkSmart.
+At this stage, ParkSmart has:
 
-Some common examples are:
+```text
+No database
 
-| Code | Meaning |
-|---|---|
-| `200` | Request succeeded |
-| `201` | Resource created successfully |
-| `400` | Invalid request |
-| `401` | Authentication required or invalid |
-| `403` | User is authenticated but not authorised |
-| `404` | Resource not found |
-| `409` | Conflict with existing data/state |
-| `500` | Unexpected server error |
+No authentication
 
-You do not need to implement all of these now.
+No parking data
 
-For your test route, a successful request should return an appropriate success response.
+No reservations
+```
 
-### 📚 Helpful Resource
+If something goes wrong later, we need a simple way of determining whether the API itself is still running.
 
-**MDN — HTTP Response Status Codes**
+The test endpoint gives us that.
 
-https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Status
+A request to:
+
+```text
+GET /api/test
+```
+
+should result in:
+
+```text
+Client
+-> Express
+-> Test Route
+-> JSON Response
+```
+
+If this works, you have confirmed that Express can receive and respond to an HTTP request.
 
 ---
 
-# ▶️ 18. Create `server.js`
+# ▶️ 19. Configure `server.js`
 
 Open:
 
@@ -930,112 +1013,360 @@ Open:
 src/server.js
 ```
 
-This file must start the Express server.
+This file is responsible for starting the API.
 
-Your implementation should:
+Your task is to:
 
-1. Load the Express application from `app.js`.
-2. Determine which port the application should use.
-3. Tell Express to listen on that port.
-4. Display a useful terminal message when the server starts.
+1. Import the Express application from `app.js`.
+2. Define the port the API should listen on.
+3. Start the server.
+4. Display a useful message in the terminal when the server starts.
 
-For now, your server should eventually display something similar to:
+For development, ParkSmart can initially use:
 
 ```text
-ParkSmart API running on port 3000
+3000
 ```
 
-Research the Express `listen()` method.
+as its port.
 
-### 📚 Helpful Resource
+When successful, your terminal should display a message similar to:
 
-**Express — Hello World Example**
+```text
+ParkSmart API is running on port 3000
+```
 
+### 📚 Resources
+
+**Express — Hello World:**  
 https://expressjs.com/en/starter/hello-world.html
 
-Pay attention to:
+Review how Express uses:
 
 ```text
-app.listen()
+listen()
 ```
+
+to start accepting requests.
 
 ---
 
-# 🔐 19. Create the Environment File
+# ⚙️ 20. Add npm Scripts
 
-At the root of the API project, create:
+At the moment, you could manually tell Node which JavaScript file to execute.
+
+Instead, configure scripts inside:
+
+```text
+package.json
+```
+
+Add appropriate scripts so that the project can support:
+
+```text
+npm start
+```
+
+and:
+
+```text
+npm run dev
+```
+
+The normal start command should run the application using Node.
+
+The development command should run the application using Nodemon.
+
+Your scripts should point to:
+
+```text
+src/server.js
+```
+
+### Why?
+
+This gives developers a consistent way to start the project.
+
+Instead of remembering:
+
+```text
+Which file do I run?
+
+Which tool should I use?
+
+Where is the server?
+```
+
+the developer can simply use:
+
+```powershell
+npm run dev
+```
+
+during development.
+
+---
+
+# ▶️ 21. Run the ParkSmart API
+
+Open the VS Code terminal.
+
+Make sure you are inside:
+
+```text
+ParkSmart/api/
+```
+
+Run:
+
+```powershell
+npm run dev
+```
+
+If everything has been configured correctly, the server should start.
+
+You should see your server-start message in the terminal.
+
+Keep this terminal open.
+
+Your API is now waiting for requests.
+
+---
+
+# 🌍 22. Understand `localhost`
+
+During development, your API is running on your own computer.
+
+The address:
+
+```text
+localhost
+```
+
+refers to the machine on which the application is currently running.
+
+If the API uses port `3000`, its base address will be:
+
+```text
+http://localhost:3000
+```
+
+Your test endpoint will therefore be:
+
+```text
+http://localhost:3000/api/test
+```
+
+We will deal with Android emulator networking and `10.0.2.2` in a later step.
+
+For now, test the API directly from your computer.
+
+---
+
+# 🧪 23. Test the Endpoint in Your Browser
+
+Because your test endpoint uses `GET`, you can test it using a browser.
+
+With the API running, visit:
+
+```text
+http://localhost:3000/api/test
+```
+
+You should receive the JSON response you created.
+
+If this works:
+
+```text
+Browser
+-> localhost:3000
+-> Express
+-> /api/test
+-> JSON response
+```
+
+Your first ParkSmart endpoint is working.
+
+---
+
+# 🧪 24. Test the Endpoint Using an API Client
+
+Although a browser works for simple `GET` requests, it is not enough for proper API development.
+
+You should become comfortable using an API testing tool.
+
+Choose one of the following.
+
+## Postman
+
+https://www.postman.com/downloads/
+
+## Bruno
+
+https://www.usebruno.com/downloads
+
+## Insomnia
+
+https://insomnia.rest/download
+
+## Thunder Client
+
+https://www.thunderclient.com/
+
+Thunder Client is available as a VS Code extension.
+
+---
+
+## Create Your First API Request
+
+Create a new request.
+
+Set the method to:
+
+```text
+GET
+```
+
+Use:
+
+```text
+http://localhost:3000/api/test
+```
+
+Send the request.
+
+Inspect:
+
+- The response body.
+- The HTTP status.
+- The response headers.
+- The response time.
+
+You should receive a successful response from ParkSmart.
+
+---
+
+# 📊 25. Understand HTTP Status Codes
+
+Every HTTP response contains a status code.
+
+These codes help the client understand what happened.
+
+Some common status codes include:
+
+| Status | Meaning |
+|---|---|
+| `200` | Request succeeded |
+| `201` | New resource successfully created |
+| `400` | Client sent an invalid request |
+| `401` | Authentication is required or invalid |
+| `403` | User is authenticated but not allowed to perform the action |
+| `404` | Requested resource could not be found |
+| `409` | Request conflicts with existing data/state |
+| `500` | Unexpected server error |
+
+You will use these extensively later.
+
+For now, your test endpoint should return a successful response.
+
+### 📚 Resource
+
+**MDN — HTTP Response Status Codes:**  
+https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Status
+
+Do not memorise every HTTP status code.
+
+Learn how to choose an appropriate code based on what happened.
+
+---
+
+# 🔐 26. Introduce Environment Variables
+
+Applications frequently need configuration that may change between environments.
+
+Examples include:
+
+```text
+Port numbers
+
+Database connection strings
+
+Authentication configuration
+
+Private credentials
+```
+
+These values should not all be hardcoded throughout your application.
+
+ParkSmart will use environment variables.
+
+Node.js provides access to environment variables through:
+
+```text
+process.env
+```
+
+### 📚 Resource
+
+**Node.js — Environment Variables:**  
+https://nodejs.org/api/environment_variables.html
+
+---
+
+# 📦 27. Install `dotenv`
+
+Install the `dotenv` package:
+
+```powershell
+npm install dotenv
+```
+
+`dotenv` allows the application to load values from a local `.env` file into the application's environment.
+
+### 📚 Resource
+
+**dotenv — npm:**  
+https://www.npmjs.com/package/dotenv
+
+---
+
+# 📄 28. Create `.env`
+
+Inside the `api` folder, create:
 
 ```text
 .env
 ```
 
-For now, it only needs:
+For now, add:
 
 ```env
 PORT=3000
 ```
 
-Later, additional configuration will be added.
+Do not add quotation marks.
+
+Use:
+
+```env
+PORT=3000
+```
+
+not:
+
+```env
+PORT="3000"
+```
+
+Your application should be updated so that the server obtains the port from the environment rather than relying only on a hardcoded value.
+
+You should also provide an appropriate fallback value if the environment variable is unavailable.
+
+Use the Node.js and dotenv documentation to determine how this should be implemented.
 
 ---
 
-## 🧠 Why Use Environment Variables?
-
-Avoid spreading configuration throughout the source code.
-
-For example, instead of permanently writing:
-
-```text
-Port = 3000
-```
-
-inside application logic, the value can come from the environment:
-
-```text
-.env
-  ↓
-PORT
-  ↓
-server.js
-```
-
-This means configuration can change without changing application logic.
-
----
-
-# ⚙️ 20. Load the Environment Configuration
-
-Configure the project so that the value from:
-
-```text
-.env
-```
-
-can be accessed by the Node application.
-
-Research how `dotenv` loads environment variables.
-
-Your application should be able to access:
-
-```text
-PORT
-```
-
-through Node's environment.
-
-### 📚 Helpful Resources
-
-**dotenv — Documentation**
-
-https://www.npmjs.com/package/dotenv
-
-**Node.js — Environment Variables**
-
-https://nodejs.org/en/learn/command-line/how-to-read-environment-variables-from-nodejs
-
----
-
-# 📄 21. Create `.env.example`
+# 📄 29. Create `.env.example`
 
 Create another file:
 
@@ -1049,15 +1380,11 @@ Add:
 PORT=
 ```
 
-Do not place private values inside this file.
-
----
-
-## `.env` vs `.env.example`
+The difference is important.
 
 ### `.env`
 
-Contains the actual values used on your computer.
+Contains the values used on your machine.
 
 For example:
 
@@ -1069,7 +1396,7 @@ This file should **not** be committed.
 
 ### `.env.example`
 
-Shows another developer which configuration variables the project expects.
+Documents which environment variables another developer needs.
 
 For example:
 
@@ -1079,110 +1406,467 @@ PORT=
 
 This file **can** be committed.
 
-Later, if another developer clones ParkSmart, they can see:
+Later, `.env` may contain sensitive configuration.
 
-> "I need to create a `PORT` environment variable."
-
-without receiving your private configuration.
+Never place real credentials inside `.env.example`.
 
 ---
 
-# 📜 22. Add Scripts to `package.json`
+# 🚫 30. Configure `.gitignore`
 
-You should not need to type the full path to `server.js` every time you want to run the application.
+Git should not track every file generated by your development tools.
 
-Open:
-
-```text
-package.json
-```
-
-Find:
-
-```json
-"scripts"
-```
-
-Configure scripts for:
+Create or update the repository's:
 
 ```text
-start
-dev
+.gitignore
 ```
 
-Your scripts should allow you to use:
-
-```powershell
-npm start
-```
-
-to start the application normally.
-
-And:
-
-```powershell
-npm run dev
-```
-
-to start the application using Nodemon.
-
-The commands associated with the scripts should run:
-
-```text
-src/server.js
-```
-
----
-
-# ▶️ 23. Run the API
-
-In the VS Code terminal, run:
-
-```powershell
-npm run dev
-```
-
-If everything is configured correctly, you should see a message similar to:
-
-```text
-ParkSmart API running on port 3000
-```
-
-Do not continue if the server cannot start.
-
-Read the terminal output carefully and fix the error first.
-
----
-
-# 🧪 24. Test the API in a Browser
-
-Because your first endpoint uses `GET`, you can perform a quick test using a browser.
-
-Navigate to:
-
-```text
-http://localhost:3000/api/test
-```
-
-You should receive your JSON response.
+At minimum, make sure you ignore unnecessary Node.js and Android-generated files.
 
 For example:
 
-```json
-{
-  "message": "ParkSmart API is running"
-}
+```gitignore
+# Node dependencies
+node_modules/
+
+# Environment variables
+.env
+
+# Android local configuration
+local.properties
+
+# Android / Gradle generated files
+.gradle/
+**/build/
+
+# IDE-specific local files
+.idea/
+
+# Operating system files
+.DS_Store
+Thumbs.db
 ```
 
-If this works, you have successfully created your first REST API endpoint.
+> ⚠️ Be careful when ignoring IDE files in collaborative Android projects. Some project configuration may be intentionally shared. Review what your team actually needs rather than blindly ignoring every file.
+
+GitHub's documentation explains that `.gitignore` tells Git which files and directories should not be tracked. :contentReference[oaicite:0]{index=0}
+
+### 📚 Resources
+
+**GitHub — Ignoring Files:**  
+https://docs.github.com/en/get-started/git-basics/ignoring-files
+
+**GitHub — `.gitignore` Templates:**  
+https://github.com/github/gitignore
 
 ---
 
-# 🧰 25. Test the API Using an API Client
+# 🔍 31. Check That `.gitignore` Works
 
-A browser is useful for simple `GET` requests, but it is not sufficient for properly testing a REST API.
+Before committing your project, run:
 
-As ParkSmart grows, you will need to send:
+```powershell
+git status
+```
+
+Inspect the files Git wants to track.
+
+You should **not** see:
+
+```text
+node_modules/
+
+.env
+```
+
+waiting to be committed.
+
+You should see files such as:
+
+```text
+package.json
+
+package-lock.json
+
+.env.example
+
+src/
+```
+
+If `.env` has already been committed before being added to `.gitignore`, simply adding it to `.gitignore` will not automatically stop Git from tracking the existing file. GitHub documents that an already tracked file must first be untracked. :contentReference[oaicite:1]{index=1}
+
+---
+
+# 🧪 32. Test the API Again
+
+Restart the API:
+
+```powershell
+npm run dev
+```
+
+Confirm that the application reads the port from your environment configuration.
+
+Test:
+
+```text
+GET http://localhost:3000/api/test
+```
+
+Confirm that the endpoint still works.
+
+You have now tested:
+
+```text
+Environment configuration
+-> Server startup
+-> Express
+-> Route
+-> HTTP response
+```
+
+---
+
+# 🧯 33. Test an Invalid Endpoint
+
+Do not only test successful requests.
+
+Try requesting something that does not exist.
+
+For example:
+
+```text
+GET http://localhost:3000/api/does-not-exist
+```
+
+Observe what Express returns.
+
+Ask yourself:
+
+- What HTTP status was returned?
+- What response body was returned?
+- Is this response suitable for a REST API?
+- Would an Android application be able to handle this response cleanly?
+
+You do not need to build a complete centralised error-handling system yet.
+
+For now, understand that successful and unsuccessful requests both need to be considered when designing an API.
+
+---
+
+# 📁 34. Review Your Project Structure
+
+By the end of Step 01, your project should resemble:
+
+```text
+ParkSmart/
+|
+|-- android/
+|   |
+|   |-- ParkSmartAndroid/
+|
+|-- api/
+|   |
+|   |-- src/
+|   |   |
+|   |   |-- config/
+|   |   |
+|   |   |-- controllers/
+|   |   |
+|   |   |-- middleware/
+|   |   |
+|   |   |-- models/
+|   |   |
+|   |   |-- routes/
+|   |   |
+|   |   |-- services/
+|   |   |
+|   |   |-- utils/
+|   |   |
+|   |   |-- app.js
+|   |   |
+|   |   |-- server.js
+|   |
+|   |-- .env
+|   |
+|   |-- .env.example
+|   |
+|   |-- package.json
+|   |
+|   |-- package-lock.json
+|
+|-- README.md
+|
+|-- .gitignore
+```
+
+Remember:
+
+```text
+node_modules/
+```
+
+exists locally but should not be committed to the repository.
+
+---
+
+# 🧠 35. Make Sure You Understand the Flow
+
+At the end of this step, your backend flow is still very simple:
+
+```text
+API Client
+-> HTTP Request
+-> Express
+-> Route
+-> HTTP Response
+```
+
+For example:
+
+```text
+GET /api/test
+-> Express receives request
+-> Matching route is found
+-> Route handles request
+-> JSON response is returned
+```
+
+Later, ParkSmart will expand this into something closer to:
+
+```text
+Android
+-> Route
+-> Authentication
+-> Controller
+-> Service
+-> Database
+-> Response
+```
+
+Do not rush ahead.
+
+Each layer will be introduced as it becomes necessary.
+
+---
+
+# 🐛 Common Problems
+
+## `node` is not recognised
+
+Run:
+
+```powershell
+node --version
+```
+
+If Windows cannot find the command:
+
+1. Confirm that Node.js was installed.
+2. Close and reopen VS Code.
+3. Open a new terminal.
+4. Try the command again.
+5. If necessary, check whether Node.js was added to your system PATH.
+
+---
+
+## `npm` is not recognised
+
+Run:
+
+```powershell
+npm --version
+```
+
+npm is normally installed together with Node.js.
+
+If Node works but npm does not, restart your terminal and verify the Node.js installation.
+
+---
+
+## `Cannot find module 'express'`
+
+Make sure your terminal is inside:
+
+```text
+ParkSmart/api/
+```
+
+Then run:
+
+```powershell
+npm install
+```
+
+Check that:
+
+```text
+node_modules/
+```
+
+has been created.
+
+---
+
+## `nodemon` is not recognised
+
+If Nodemon was installed locally as a development dependency, use:
+
+```powershell
+npm run dev
+```
+
+using the script configured inside `package.json`.
+
+You do not need a global Nodemon installation.
+
+---
+
+## Port 3000 is already in use
+
+Another application may already be using the port.
+
+Stop the other server or change:
+
+```env
+PORT=3000
+```
+
+to another available port, for example:
+
+```env
+PORT=3001
+```
+
+Remember that your request URL must then use the same port.
+
+---
+
+## The browser says the page cannot be reached
+
+Check:
+
+1. Is the API currently running?
+2. Is the terminal showing an error?
+3. Are you using the correct port?
+4. Is the endpoint correct?
+5. Did you accidentally stop the server?
+
+---
+
+## `/api/test` returns 404
+
+Check:
+
+- The HTTP method.
+- The route path.
+- Whether the route was registered.
+- Whether the correct application file is being executed.
+- Whether you saved your changes.
+
+Remember:
+
+```text
+/api/test
+```
+
+and:
+
+```text
+/api/tests
+```
+
+are different paths.
+
+---
+
+## Changes do not appear
+
+If using Nodemon:
+
+1. Save the file.
+2. Check the terminal.
+3. Confirm that Nodemon restarted the server.
+4. Send the request again.
+
+---
+
+# 📚 Helpful Resources
+
+Use these resources when you get stuck rather than copying an entire solution from somewhere else.
+
+## 🟢 Node.js
+
+**Node.js — Download**  
+https://nodejs.org/en/download
+
+Install Node.js from here.
+
+**Node.js — Introduction**  
+https://nodejs.org/en/learn/getting-started/introduction-to-nodejs
+
+Useful for understanding what Node.js is and why JavaScript can be used on a server.
+
+**Node.js — Environment Variables**  
+https://nodejs.org/api/environment_variables.html
+
+Useful when configuring `.env` and `process.env`.
+
+---
+
+## 📦 npm
+
+**npm — `npm init`**  
+https://docs.npmjs.com/cli/commands/npm-init
+
+Explains how a Node project is initialised.
+
+**npm — `package.json`**  
+https://docs.npmjs.com/cli/configuring-npm/package-json
+
+Useful for understanding dependencies, scripts and project metadata.
+
+---
+
+## 🌐 Express
+
+**Express — Installing**  
+https://expressjs.com/en/starter/installing.html
+
+Use this when setting up Express. The current Express documentation requires Node.js 18 or later for Express 5. :contentReference[oaicite:2]{index=2}
+
+**Express — Hello World**  
+https://expressjs.com/en/starter/hello-world.html
+
+Useful for understanding how an Express application starts.
+
+**Express — Basic Routing**  
+https://expressjs.com/en/starter/basic-routing.html
+
+This is particularly important for Step 01.
+
+Express defines routes using the general structure:
+
+```text
+app.METHOD(PATH, HANDLER)
+```
+
+where the method represents the HTTP method and the path represents the endpoint. :contentReference[oaicite:3]{index=3}
+
+**Express — Routing Guide**  
+https://expressjs.com/en/guide/routing.html
+
+Use this to understand routes in more detail.
+
+---
+
+## 🌍 HTTP
+
+**MDN — HTTP Methods**  
+https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Methods
+
+Useful for understanding:
 
 ```text
 GET
@@ -1192,657 +1876,167 @@ PATCH
 DELETE
 ```
 
-requests.
-
-You may use an API client such as:
-
-- Postman
-- Bruno
-- Insomnia
-- Thunder Client for VS Code
-
-Your lecturer may specify which tool should be used.
-
----
-
-## Example Test
-
-Create a request using:
-
-```text
-Method:
-GET
-
-URL:
-http://localhost:3000/api/test
-```
-
-Send the request.
-
-Confirm:
-
-- The request succeeds.
-- The expected status code is returned.
-- The response body contains JSON.
-
-### 📚 Helpful Resources
-
-**Postman — Send Your First API Request**
-
-https://learning.postman.com/docs/getting-started/first-steps/sending-the-first-request/
-
-**Bruno — Documentation**
-
-https://docs.usebruno.com/
-
-**Thunder Client**
-
-https://www.thunderclient.com/
-
----
-
-# 🚫 26. Create `.gitignore`
-
-Your project contains files that should not be uploaded to GitHub.
-
-Create:
-
-```text
-.gitignore
-```
-
-at the appropriate repository level.
-
-At minimum, your backend should ignore:
-
-```gitignore
-# Node dependencies
-node_modules/
-
-# Environment variables
-.env
-
-# Logs
-*.log
-```
-
-Your Android project should also avoid committing local/generated files such as:
-
-```gitignore
-.gradle/
-local.properties
-**/build/
-```
-
-Depending on how your repository is structured, Android Studio may already have generated suitable ignore rules.
-
-Do not blindly replace an existing `.gitignore`.
-
-Review it first and add anything that is missing.
-
----
-
-# 🧠 27. Why Don't We Commit `node_modules`?
-
-The `node_modules` folder can contain thousands of generated dependency files.
-
-Those dependencies are already described by:
-
-```text
-package.json
-package-lock.json
-```
-
-Therefore, another developer can clone the project and run:
-
-```powershell
-npm install
-```
-
-to restore the required dependencies.
-
-The repository does not need to store the entire `node_modules` folder.
-
----
-
-# 🔐 28. Why Don't We Commit `.env`?
-
-The `.env` file may eventually contain sensitive configuration.
-
-For example:
-
-```text
-Database connection details
-Private credentials
-Service configuration
-```
-
-Even though the file currently contains only a port, it is good practice to protect it from the beginning.
-
-Later, you should not suddenly have to remember:
-
-> "Oh. That file has secrets now. Maybe I shouldn't have been committing it for three weeks." 😭
-
----
-
-# 🔎 29. Check Git Before Committing
-
-Before committing your work, run:
-
-```powershell
-git status
-```
-
-Review the files Git intends to track.
-
-Make sure you are **not** committing:
-
-```text
-node_modules/
-.env
-local.properties
-build folders
-```
-
-Do not assume `.gitignore` works simply because the file exists.
-
-Check.
-
----
-
-# 🧪 30. Test an Invalid Endpoint
-
-Your API works when you request:
-
-```text
-/api/test
-```
-
-Now deliberately request something that does not exist.
-
-For example:
-
-```text
-/api/does-not-exist
-```
-
-Observe what happens.
-
-Ask yourself:
-
-- What status code was returned?
-- Did Express return a response?
-- Is that response appropriate for an API?
-- Would an Android application know what went wrong?
-
-You will improve API error handling as ParkSmart develops.
-
-For now, the important goal is to start thinking about **successful and unsuccessful requests**.
-
----
-
-# 🔄 31. Understand What You Have Built
-
-At this point, your system looks like this:
-
-```text
-API Client
-    │
-    │ HTTP GET
-    ↓
-Express API
-    │
-    │ Processes /api/test
-    ↓
-JSON Response
-```
-
-For example:
-
-```text
-GET /api/test
-       ↓
-Express
-       ↓
-{
-  "message": "ParkSmart API is running"
-}
-```
-
-You have **not connected Android to the API yet**.
-
-You have **not added MongoDB yet**.
-
-You have **not added authentication yet**.
-
-That is intentional.
-
-Each part will be introduced separately.
-
----
-
-# 📂 32. Check Your Backend Structure
-
-By the end of Step 01, your API should resemble:
-
-```text
-ParkSmartAPI/
-│
-├── src/
-│   │
-│   ├── config/
-│   ├── controllers/
-│   ├── middleware/
-│   ├── models/
-│   ├── routes/
-│   ├── services/
-│   ├── utils/
-│   │
-│   ├── app.js
-│   └── server.js
-│
-├── .env
-├── .env.example
-├── .gitignore
-├── package.json
-└── package-lock.json
-```
-
-Remember:
-
-```text
-config/
-controllers/
-middleware/
-models/
-routes/
-services/
-utils/
-```
-
-may still be empty.
-
-Do not add unnecessary code simply to fill the folders.
-
----
-
-# 🧪 Testing Checklist
-
-Before moving on, perform the following tests.
-
-## 📱 Android Project
-
-- [ ] The Android project opens successfully.
-- [ ] Gradle Sync succeeds.
-- [ ] The application builds.
-- [ ] The application launches on an emulator or physical device.
-
----
-
-## 🟢 Node.js
-
-Run:
-
-```powershell
-node --version
-```
-
-- [ ] A Node.js version is displayed.
-
-Run:
-
-```powershell
-npm --version
-```
-
-- [ ] An npm version is displayed.
-
----
-
-## 🌐 API
-
-Run:
-
-```powershell
-npm run dev
-```
-
-- [ ] The server starts.
-- [ ] Nodemon runs successfully.
-- [ ] The correct port is displayed.
-
-Send:
-
-```text
-GET /api/test
-```
-
-- [ ] The request succeeds.
-- [ ] An appropriate success status is returned.
-- [ ] JSON is returned.
-- [ ] The expected message is returned.
-
-Send a request to an invalid endpoint.
-
-- [ ] You observed how the API handles an unknown route.
-
----
-
-## 🔐 Project Configuration
-
-- [ ] `.env` exists.
-- [ ] `.env.example` exists.
-- [ ] `PORT` is read from the environment.
-- [ ] `.gitignore` exists.
-- [ ] `.env` is ignored.
-- [ ] `node_modules/` is ignored.
-- [ ] Android-generated files are appropriately ignored.
-
----
-
-# 🐛 Common Problems
-
-## `node` Is Not Recognised
-
-If:
-
-```powershell
-node --version
-```
-
-fails, Node.js may not be installed correctly or may not be available through your system PATH.
-
-After installing Node.js:
-
-1. Close the terminal.
-2. Open a new terminal.
-3. Try again.
-
----
-
-## `npm` Is Not Recognised
-
-npm is normally installed with Node.js.
-
-Confirm that Node.js installed successfully and reopen your terminal.
-
----
-
-## `Cannot find module 'express'`
-
-Make sure you installed Express:
-
-```powershell
-npm install express
-```
-
-Also make sure your terminal is inside the correct project folder.
-
----
-
-## `Cannot find module 'dotenv'`
-
-Install dotenv:
-
-```powershell
-npm install dotenv
-```
-
----
-
-## Nodemon Does Not Work
-
-Make sure it was installed:
-
-```powershell
-npm install --save-dev nodemon
-```
-
-Then use:
-
-```powershell
-npm run dev
-```
-
-rather than assuming `nodemon` is globally installed.
-
----
-
-## `PORT` Is Undefined
-
-Check:
-
-- The file is named exactly `.env`.
-- `.env` is in the correct location.
-- dotenv is loaded before the environment value is accessed.
-- The variable is named exactly `PORT`.
-
-Environment-variable names must match.
-
-```text
-PORT
-```
-
-is not the same as:
-
-```text
-Port
-```
-
----
-
-## `Cannot GET /api/test`
-
-Check:
-
-- The server is running.
-- The URL is correct.
-- The route uses `GET`.
-- The route path is correct.
-- `app.js` is being used by `server.js`.
-- You saved your files.
-- Nodemon restarted successfully.
-
----
-
-## Port Already in Use
-
-Another application may already be using the configured port.
-
-Read the terminal error.
-
-You can:
-
-- Stop the other process, or
-- Configure ParkSmart to use another suitable port.
-
-Do not randomly change several settings at once. Identify the actual cause first.
-
----
-
-# 📚 Helpful Resources
-
-## 🟢 Node.js
-
-**Node.js — Download**
-
-https://nodejs.org/en/download
-
-**Node.js — Introduction**
-
-https://nodejs.org/en/learn/getting-started/introduction-to-nodejs
-
----
-
-## 📦 npm
-
-**npm — package.json**
-
-https://docs.npmjs.com/cli/configuring-npm/package-json
-
-**npm — Installing Packages**
-
-https://docs.npmjs.com/downloading-and-installing-packages-locally
-
----
-
-## 🌐 Express
-
-**Express — Installing**
-
-https://expressjs.com/en/starter/installing.html
-
-**Express — Hello World**
-
-https://expressjs.com/en/starter/hello-world.html
-
-**Express — Basic Routing**
-
-https://expressjs.com/en/starter/basic-routing.html
-
-**Express — Routing**
-
-https://expressjs.com/en/guide/routing.html
-
-**Express — Using Middleware**
-
-https://expressjs.com/en/guide/using-middleware.html
-
----
-
-## 🔐 Environment Variables
-
-**Node.js — Environment Variables**
-
-https://nodejs.org/en/learn/command-line/how-to-read-environment-variables-from-nodejs
-
-**dotenv**
-
-https://www.npmjs.com/package/dotenv
-
----
-
-## 🌍 HTTP
-
-**MDN — Overview of HTTP**
-
-https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Overview
-
-**MDN — HTTP Request Methods**
-
-https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Methods
-
-**MDN — HTTP Status Codes**
-
+**MDN — HTTP Status Codes**  
 https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Status
+
+Useful for understanding responses such as:
+
+```text
+200
+201
+400
+401
+403
+404
+409
+500
+```
 
 ---
 
 ## 🧪 API Testing
 
-**Postman — Send Your First Request**
+**Postman**  
+https://www.postman.com/downloads/
 
-https://learning.postman.com/docs/getting-started/first-steps/sending-the-first-request/
+**Bruno**  
+https://www.usebruno.com/downloads
 
-**Bruno — Documentation**
+**Insomnia**  
+https://insomnia.rest/download
 
-https://docs.usebruno.com/
-
-**Thunder Client**
-
+**Thunder Client**  
 https://www.thunderclient.com/
 
----
-
-## 💾 Git
-
-**GitHub — Ignoring Files**
-
-https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
-
-**GitHub — About Git**
-
-https://docs.github.com/en/get-started/using-git/about-git
+You only need one of these tools.
 
 ---
 
-# ✅ Before Moving On
+## 🔐 Git and `.gitignore`
 
-Do **not** continue to Step 02 simply because you reached the bottom of this page.
+**GitHub — Ignoring Files**  
+https://docs.github.com/en/get-started/git-basics/ignoring-files
 
-Confirm that you can actually demonstrate each of the following:
+Explains how `.gitignore` works. :contentReference[oaicite:4]{index=4}
 
-- [ ] My Android project builds and runs.
-- [ ] I can explain what the Android application is responsible for.
-- [ ] I can explain what the REST API is responsible for.
-- [ ] Node.js is installed.
-- [ ] npm is installed.
-- [ ] My Node.js project has been initialised.
+**GitHub — Official `.gitignore` Templates**  
+https://github.com/github/gitignore
+
+Useful when deciding which generated files should not be committed. :contentReference[oaicite:5]{index=5}
+
+---
+
+# 🔒 Security Checks
+
+Before completing Step 01, check that:
+
+- `.env` is not being committed.
+- `node_modules/` is not being committed.
+- No passwords or credentials have been placed inside JavaScript files.
+- No private values have been placed inside the README.
+- Environment-specific values are kept outside the application logic.
+- `.env.example` contains variable names but no private values.
+
+You do not have many secrets yet.
+
+That will change significantly in later steps.
+
+Start using good habits now.
+
+---
+
+# 🧪 Step 01 Testing Checklist
+
+Test the following before moving on.
+
+## 📱 Android
+
+- [ ] The ParkSmart Android project exists.
+- [ ] Gradle Sync succeeds.
+- [ ] The Android application builds.
+- [ ] The Android application launches.
+
+## 🟢 Node.js
+
+- [ ] `node --version` works.
+- [ ] `npm --version` works.
+- [ ] The Node project has been initialised.
+- [ ] `package.json` exists.
+- [ ] `package-lock.json` exists.
+
+## 🌐 Express
+
 - [ ] Express is installed.
-- [ ] Nodemon is installed.
-- [ ] dotenv is installed.
-- [ ] I understand the purpose of `package.json`.
-- [ ] I understand the purpose of `package-lock.json`.
-- [ ] My backend folder structure has been created.
-- [ ] I understand the purpose of the main backend folders.
-- [ ] `app.js` configures my Express application.
-- [ ] `server.js` starts my server.
-- [ ] My port is read from an environment variable.
+- [ ] Nodemon is installed as a development dependency.
+- [ ] `app.js` exists.
+- [ ] `server.js` exists.
 - [ ] `npm run dev` starts the API.
-- [ ] `GET /api/test` works.
-- [ ] My API returns JSON.
-- [ ] I can test my API independently from Android.
-- [ ] `.env` is not being tracked by Git.
-- [ ] `node_modules/` is not being tracked by Git.
-- [ ] No private configuration has been committed.
+- [ ] The terminal displays a useful startup message.
 
-If all of these checks pass, your ParkSmart foundation is ready.
+## 🧪 API
+
+- [ ] `GET /api/test` works.
+- [ ] The endpoint returns JSON.
+- [ ] The endpoint returns a successful HTTP status.
+- [ ] You can test the endpoint using an API client.
+- [ ] You tested at least one invalid endpoint.
+
+## ⚙️ Configuration
+
+- [ ] `dotenv` is installed.
+- [ ] `.env` exists.
+- [ ] `PORT` is stored in `.env`.
+- [ ] `.env.example` exists.
+- [ ] The API can read the port from the environment.
+
+## 🔐 Git
+
+- [ ] `.gitignore` exists.
+- [ ] `.env` is ignored.
+- [ ] `node_modules/` is ignored.
+- [ ] Android-generated files are appropriately ignored.
+- [ ] `git status` does not show private or unnecessary generated files waiting to be committed.
 
 ---
 
-# ➡️ Next: Step 02 — MongoDB and Backend Data
+# ✅ Step 01 Complete
 
-In the next step, you will answer a problem that your current API has:
-
-> **What happens when ParkSmart needs to remember something after the server stops?**
-
-You will introduce:
+At this point, you should have two working applications:
 
 ```text
-MongoDB
-    ↓
-Collections and Documents
-    ↓
-Mongoose
-    ↓
-Schemas
-    ↓
-Models
-    ↓
-Validation
-    ↓
-Relationships
+ParkSmart Android Application
+
+and
+
+ParkSmart REST API
 ```
 
-Your architecture will then grow from:
+They are **not communicating with each other yet**.
+
+Your API also does **not have persistent data yet**.
+
+That is intentional.
+
+You have established the foundation that the rest of ParkSmart will use.
+
+Your current backend flow is:
 
 ```text
-Client
-   ↓
+API Client
+-> Express
+-> Test Endpoint
+-> JSON Response
+```
+
+In the next step, we need to solve an important problem:
+
+> **Where will ParkSmart store its users, parking areas, parking bays and reservations?**
+
+That introduces the next part of the system:
+
+```text
 Express API
+-> MongoDB
 ```
 
-to:
-
-```text
-Client
-   ↓
-Express API
-   ↓
-Mongoose
-   ↓
-MongoDB
-```
-
-Do not begin Step 02 until your API is working correctly.
-````
+# ➡️ Continue to Step 02 — MongoDB and Backend Data
