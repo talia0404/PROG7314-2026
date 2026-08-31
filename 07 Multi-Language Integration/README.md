@@ -1,6 +1,6 @@
-# 🌍 Multi-Language Support in Android
+# 🌍 Multi-Language Support in Android Using ML Kit
 
-In this activity, you will add multi-language support to an Android application.
+In this activity, you will add **multi-language support** to an Android application.
 
 The application should support:
 
@@ -10,39 +10,76 @@ Afrikaans
 isiZulu
 ```
 
+However, you will **not use the same translation method for every language**.
+
+You will combine Android's normal localisation system with **Google ML Kit Translation**:
+
+```text
+English
+-> Default Android string resources
+
+Afrikaans
+-> Google ML Kit automatic translation
+
+isiZulu
+-> Android string resource fallback
+```
+
+This hybrid approach is necessary because ML Kit Translation currently supports **Afrikaans**, but does **not currently support isiZulu**.
+
 The user should be able to:
 
-- Open the application.
-- View all text in the currently selected language.
-- Change the application's language.
-- Switch between English, Afrikaans and isiZulu.
-- Return to the device/system language.
-- Close and reopen the application without unnecessarily losing the selected app language.
-- Use Android's per-app language functionality where supported.
+* Open the application.
+* View all text in the currently selected language.
+* Choose between English, Afrikaans and isiZulu.
+* Automatically translate the English interface into Afrikaans using ML Kit.
+* Use pre-translated Android resources when isiZulu is selected.
+* Switch between the three supported languages.
+* Return to English when required.
+* Close and reopen the application without unnecessarily losing the selected app language.
+* Receive appropriate feedback while a translation model is downloading or text is being translated.
+* Continue using the application if automatic translation fails.
 
-The intended flow is:
+The overall intended flow is:
 
 ```text
 Application starts
--> Android determines the application locale
--> Correct string resources are loaded
+-> Current language is determined
+-> Correct text is loaded
 -> User chooses another language
--> Application locale changes
--> Android reloads the relevant resources
--> Interface appears in the selected language
+
+-> English selected
+   -> Load default English resources
+
+-> Afrikaans selected
+   -> Retrieve English source strings
+   -> Prepare ML Kit Afrikaans translation model
+   -> Automatically translate English text
+   -> Update interface with translated text
+
+-> isiZulu selected
+   -> Change Android application locale to zu
+   -> Load values-zu/strings.xml
+   -> Interface appears in isiZulu
 ```
 
 ---
 
 # 🧠 1. Understand Internationalisation and Localisation
 
-Before implementing anything, understand the two main concepts.
+Before implementing anything, understand the two main concepts involved.
 
-## Internationalisation
+## 🌐 Internationalisation
 
-Internationalisation means designing an application so that it **can support different languages and regional formats**.
+**Internationalisation** means designing an application so that it **can support different languages and regional formats**.
 
-Examples include:
+It is often abbreviated as:
+
+```text
+i18n
+```
+
+Examples of internationalisation include:
 
 ```text
 Moving visible text into resource files
@@ -53,16 +90,38 @@ Supporting different date formats
 
 Supporting different number formats
 
+Supporting different currencies
+
 Supporting right-to-left layouts
+
+Designing layouts that can accommodate longer translated text
 ```
 
-The application is being prepared so that localisation is possible.
+For example, this is not ideal:
+
+```kotlin
+Text(
+    text = "Welcome to our application"
+)
+```
+
+The English sentence has been hardcoded directly into the Kotlin file.
+
+A better approach is to store user-facing text in Android resources:
+
+```xml
+<string name="welcome_message">
+    Welcome to our application
+</string>
+```
+
+The application is then being designed in a way that makes localisation possible.
 
 ---
 
-## Localisation
+## 🗣️ Localisation
 
-Localisation means adapting the application for a particular language or region.
+**Localisation** means adapting the application for a particular language or region.
 
 For example:
 
@@ -81,150 +140,243 @@ Android provides a resource system specifically for this purpose.
 
 ### 📚 Helpful Resource
 
-**Android — Localise Your App:**  
-https://developer.android.com/guide/topics/resources/localization
+[Android — Localise Your App](https://developer.android.com/guide/topics/resources/localization?)
 
 ---
 
-# 🧩 2. Understand the Approach Used in This Activity
+# 🧩 2. Understand the Approaches to Multi-Language Support
 
 There are several ways an Android application can support multiple languages.
 
-## Option 1 — Follow the Device Language
+Understanding these approaches is important because this activity will use **more than one**.
 
-The application can simply provide translated resources.
+## 📱 Option 1 — Follow the Device Language
 
-Android then loads the language that best matches the device language.
+The application can provide translated Android resources and allow Android to automatically choose the appropriate resource set.
 
 For example:
 
 ```text
 Device language:
-Afrikaans
+isiZulu
 
 ->
 
-Android loads:
-values-af
+Android searches for:
+values-zu/
+
+->
+
+Correct isiZulu resources are loaded
 ```
 
-This is the simplest localisation approach.
+This is the traditional Android localisation approach.
 
 ---
 
-## Option 2 — Android Per-App Language Settings
+## ⚙️ Option 2 — Android Per-App Language Settings
 
-Android 13 and later support language preferences for individual applications.
+Modern Android versions support language preferences for individual applications.
 
-This means a user's phone could use:
+For example, the user's phone could use:
 
 ```text
+Device:
 English
 ```
 
-while one specific application uses:
+while one application uses:
 
 ```text
+Application:
 isiZulu
 ```
 
-Android provides system-level per-app language preferences for applications that declare their supported locales. :contentReference[oaicite:0]{index=0}
+Android 13 and later provide system-level support for per-app language preferences when applications correctly declare their supported locales.
+
+### 📚 Helpful Resource
+
+[Android — Per-App Language Preferences](https://developer.android.com/guide/topics/resources/app-languages?)
 
 ---
 
-## Option 3 — In-App Language Selector
+## 👆 Option 3 — In-App Language Selector
 
-An application can also provide its own language screen.
+An application can provide its own language selection interface.
 
 For example:
 
 ```text
 Choose Language
 
-English
+[ English ]
 
-Afrikaans
+[ Afrikaans ]
 
-isiZulu
-
-Use Device Language
+[ isiZulu ]
 ```
 
-Changing the language through the application updates its locale.
+The application then responds to the user's selection.
+
+This is the approach you will implement in this activity.
 
 ---
 
-# ⭐ 3. Approach Used for This Demo
+## 🤖 Option 4 — Automatic Translation with ML Kit
 
-You will use:
-
-```text
-Android String Resources
-+
-AppCompat Per-App Locale Support
-+
-In-App Language Selector
-```
-
-This approach is useful because it demonstrates:
-
-- How translated resources are stored.
-- How Android selects resources.
-- How the user can change only the application's language.
-- How Android 13+ integrates app language preferences with system settings.
-- How older Android versions can still support application-specific language selection.
-
-AndroidX AppCompat provides equivalent per-app locale APIs for backward compatibility with versions before Android 13. :contentReference[oaicite:1]{index=1}
-
----
-
-# 🏗️ 4. Create the Android Project
-
-Create a new Android Studio project.
-
-Use:
-
-```text
-New Project
--> Empty Activity
-```
-
-Suggested settings:
-
-```text
-Name:
-MultiLanguageDemo
-
-Language:
-Kotlin
-
-UI:
-Jetpack Compose
-
-Minimum SDK:
-API 24 or later
-```
-
-Choose an appropriate package name.
+Instead of manually creating a translated resource file for every supported language, Google ML Kit can automatically translate supported languages.
 
 For example:
 
 ```text
-com.yourname.multilanguagedemo
+English source:
+
+Welcome to our multi-language app.
+
+        |
+
+        v
+
+Google ML Kit Translation
+
+        |
+
+        v
+
+Afrikaans result
 ```
 
-Before continuing:
+ML Kit uses downloadable translation models.
 
-- Allow Gradle Sync to finish.
-- Run the project.
-- Confirm that the application builds successfully.
-- Confirm that the default activity opens.
+Once the required model is available on the device, translation can happen **on-device**.
+
+### 📚 Helpful Resource
+
+[Google ML Kit — Translate Text on Android](https://developers.google.com/ml-kit/language/translation/android?)
 
 ---
 
-# 📦 5. Add AppCompat
+# 🔀 3. Understand the Hybrid Approach Used in This Activity
 
-The application will use AndroidX AppCompat's per-app locale functionality.
+This activity deliberately combines the approaches above.
+
+You will implement:
+
+```text
+                    LANGUAGE SELECTED
+                           |
+          -------------------------------------
+          |                 |                 |
+          v                 v                 v
+       ENGLISH          AFRIKAANS          ISIZULU
+          |                 |                 |
+          v                 v                 v
+    strings.xml        ML Kit             values-zu
+                         |                strings.xml
+                         v                   |
+                  Automatic Translation      |
+                         |                   |
+                         ---------   ----------
+                                  | |
+                                  v v
+                              COMPOSE UI
+```
+
+### English
+
+English is the application's **default/source language**.
+
+```text
+English
+-> res/values/strings.xml
+```
+
+### Afrikaans
+
+Afrikaans will demonstrate **automatic runtime translation**.
+
+```text
+Afrikaans
+-> English source strings
+-> ML Kit
+-> Afrikaans translation
+-> Compose UI
+```
+
+You will **not manually create**:
+
+```text
+values-af/strings.xml
+```
+
+for this activity.
+
+### isiZulu
+
+ML Kit Translation does not currently support isiZulu.
+
+Therefore:
+
+```text
+isiZulu
+-> Android localisation
+-> values-zu/strings.xml
+```
+
+This is the application's **fallback translation strategy**.
+
+### 📚 Helpful Resource
+
+[ML Kit — Supported Translation Languages](https://developers.google.com/ml-kit/language/translation/translation-language-support?)
+
+---
+
+# 🏗️ 4. Create or Open Your Android Project
+
+You may continue using the Android project created during the previous localisation demonstration.
+
+Your application should use:
+
+```text
+Kotlin
+
+Jetpack Compose
+
+Material 3
+
+Minimum SDK 23 or higher
+```
+
+ML Kit Translation requires API 23 or higher.
+
+Check your module-level:
+
+```text
+app/build.gradle.kts
+```
+
+and ensure your project's minimum SDK is compatible.
+
+For example:
+
+```kotlin
+android {
+
+    defaultConfig {
+
+        /*
+         * ML Kit Translation requires API 23 or higher.
+         */
+        minSdk = 23
+    }
+}
+```
+
+If your project already uses a higher minimum SDK, **do not lower it**.
+
+---
+
+# 📦 5. Add the Required Dependencies
 
 Open:
 
@@ -232,134 +384,237 @@ Open:
 app/build.gradle.kts
 ```
 
-Add AppCompat if it is not already available:
+Locate:
 
 ```kotlin
+dependencies {
+
+}
+```
+
+## 🤖 Add ML Kit Translation
+
+Add:
+
+```kotlin
+/*
+ * Google ML Kit Translation
+ *
+ * This dependency allows the application to automatically
+ * translate text between supported languages.
+ *
+ * In this activity it will be used for:
+ *
+ * English -> Afrikaans
+ */
+implementation("com.google.mlkit:translate:17.0.3")
+```
+
+---
+
+## 🌐 Add AppCompat
+
+Also add:
+
+```kotlin
+/*
+ * AppCompat
+ *
+ * This will be used for Android's application locale
+ * functionality.
+ *
+ * It is particularly important for our isiZulu fallback,
+ * where Android will load values-zu/strings.xml.
+ */
 implementation("androidx.appcompat:appcompat:1.7.1")
 ```
 
-Then run:
+Your dependencies should therefore contain:
+
+```kotlin
+dependencies {
+
+    /*
+     * Existing Compose and Android dependencies will
+     * remain here.
+     */
+
+
+    /*
+     * Used for automatic English -> Afrikaans translation.
+     */
+    implementation(
+        "com.google.mlkit:translate:17.0.3"
+    )
+
+
+    /*
+     * Used for Android application locale management.
+     */
+    implementation(
+        "androidx.appcompat:appcompat:1.7.1"
+    )
+}
+```
+
+Do **not** remove your existing Compose dependencies.
+
+After adding the dependencies:
 
 ```text
 File
 -> Sync Project with Gradle Files
 ```
 
-Do not continue until the Gradle Sync succeeds.
-
-`AppCompatDelegate.setApplicationLocales()` has been available since AppCompat 1.6.0. :contentReference[oaicite:2]{index=2}
-
-### 📚 Helpful Resource
-
-**Android — AppCompatDelegate:**  
-https://developer.android.com/reference/kotlin/androidx/appcompat/app/AppCompatDelegate
-
-Focus on:
-
-```text
-setApplicationLocales()
-
-getApplicationLocales()
-```
+Wait for Gradle to finish successfully before continuing.
 
 ---
 
-# 📝 6. Move User-Facing Text into `strings.xml`
+# 🌐 6. Add Internet Permission
 
-One of the most important localisation rules is:
-
-> User-facing text should not normally be hardcoded directly inside Compose.
-
-Avoid designs such as:
-
-```text
-Text displaying:
-"Welcome to the application"
-```
-
-directly from a Kotlin String.
-
-Instead, visible text should be stored inside Android String resources.
-
-The default resource file is:
-
-```text
-app/src/main/res/values/strings.xml
-```
-
----
-
-# 🇬🇧 7. Create the Default English Resources
+ML Kit performs translation on the device, but the required language model may first need to be downloaded.
 
 Open:
 
 ```text
-app/src/main/res/values/strings.xml
+app/
+└── src/
+    └── main/
+        └── AndroidManifest.xml
 ```
 
-Add all user-facing Strings required by your screen.
+Above `<application>`, add:
 
-For this demonstration, include Strings for:
+```xml
+<!--
+    ML Kit may need Internet access to download
+    the Afrikaans translation model.
+
+    The model does not necessarily already exist
+    on the user's device.
+-->
+<uses-permission
+    android:name="android.permission.INTERNET" />
+```
+
+The basic structure should resemble:
+
+```xml
+<manifest
+    xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!--
+        Allows ML Kit to download translation models.
+    -->
+    <uses-permission
+        android:name="android.permission.INTERNET" />
+
+
+    <application
+
+        ... >
+
+    </application>
+
+</manifest>
+```
+
+You do **not** need to request Internet permission from the user at runtime.
+
+---
+
+# 🇬🇧 7. Create the Default English `strings.xml`
+
+English will be the application's default language and the **source language used by ML Kit**.
+
+Open:
 
 ```text
-Application name
-
-Screen title
-
-Welcome message
-
-Description
-
-Choose language heading
-
-English
-
-Afrikaans
-
-isiZulu
-
-Current language
-
-Use device language
+app/
+└── src/
+    └── main/
+        └── res/
+            └── values/
+                └── strings.xml
 ```
 
-For example:
+Use:
 
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
+
 <resources>
 
-    <string name="app_name">Multi-Language Demo</string>
+    <!--
+        DEFAULT LANGUAGE
 
-    <string name="screen_title">Language Settings</string>
+        The values folder contains the application's
+        default resources.
+
+        English is our default/source language.
+
+        These Strings will also be used as the source text
+        when ML Kit translates the interface into Afrikaans.
+    -->
+
+    <string name="app_name">
+        Language Demo
+    </string>
+
+
+    <!-- Screen content -->
+
+    <string name="screen_title">
+        Language Settings
+    </string>
 
     <string name="welcome_message">
-        Welcome to our application!
+        Welcome to our multi-language app.
     </string>
 
     <string name="description">
-        Choose the language you would like to use.
+        Choose your preferred language.
     </string>
 
     <string name="choose_language">
-        Choose a language
+        Choose language:
     </string>
 
-    <string name="language_english">
+
+    <!-- Language button labels -->
+
+    <string name="english">
         English
     </string>
 
-    <string name="language_afrikaans">
+    <string name="afrikaans">
         Afrikaans
     </string>
 
-    <string name="language_zulu">
+    <string name="zulu">
         isiZulu
     </string>
 
+
+    <!-- Current language -->
+
     <string name="current_language">
-        Current language
+        Current Language
     </string>
+
+
+    <!-- Translation status -->
+
+    <string name="preparing_translation">
+        Preparing translation...
+    </string>
+
+    <string name="translation_failed">
+        Automatic translation failed.
+    </string>
+
+
+    <!-- Device/system language option -->
 
     <string name="use_system_language">
         Use device language
@@ -368,25 +623,71 @@ For example:
 </resources>
 ```
 
-The default:
+---
+
+# 🚫 8. Do Not Create an Afrikaans `strings.xml`
+
+Normally Android localisation would use:
 
 ```text
 values/
+    strings.xml
+
+values-af/
+    strings.xml
+
+values-zu/
+    strings.xml
 ```
 
-resource directory should contain a complete set of resources required by the application.
+However, that would defeat the purpose of demonstrating ML Kit automatic translation.
 
-Android uses these resources as the default/fallback set when a more specific localisation is unavailable. ([developer.android.com](https://developer.android.com/guide/topics/resources/localization))
+For this activity, **do not create**:
+
+```text
+values-af/
+```
+
+Afrikaans should instead follow:
+
+```text
+values/strings.xml
+        |
+        v
+English source text
+        |
+        v
+ML Kit Translation
+        |
+        v
+Afrikaans text
+        |
+        v
+Compose UI
+```
+
+This allows you to demonstrate automatic translation rather than manually storing every Afrikaans translation.
 
 ---
 
-# 🇿🇦 8. Create the Afrikaans Resource Directory
+# 🇿🇦 9. Create the isiZulu Fallback
 
-In Android Studio:
+ML Kit Translation does not currently provide an isiZulu translation model.
+
+Therefore, isiZulu will use Android's normal localisation system.
+
+Create:
+
+```text
+res/
+└── values-zu/
+    └── strings.xml
+```
+
+In Android Studio, you can create the directory using:
 
 ```text
 res
--> Right-click
 -> New
 -> Android Resource Directory
 ```
@@ -394,121 +695,73 @@ res
 Choose:
 
 ```text
-Resource Type:
+Resource type:
 values
+
+Locale:
+zu
 ```
 
-Add the:
+Your resources should now resemble:
 
 ```text
-Locale
-```
-
-qualifier.
-
-Select:
-
-```text
-Afrikaans
-```
-
-Android should create:
-
-```text
-values-af/
-```
-
-Inside this directory, create:
-
-```text
-strings.xml
-```
-
-Use the **same String resource names** as the default English file.
-
-For example:
-
-```xml
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-
-    <string name="app_name">
-        Meertalige Demo
-    </string>
-
-    <string name="screen_title">
-        Taalinstellings
-    </string>
-
-    <string name="welcome_message">
-        Welkom by ons toepassing!
-    </string>
-
-    <string name="description">
-        Kies die taal wat jy graag wil gebruik.
-    </string>
-
-    <string name="choose_language">
-        Kies 'n taal
-    </string>
-
-    <string name="language_english">
-        Engels
-    </string>
-
-    <string name="language_afrikaans">
-        Afrikaans
-    </string>
-
-    <string name="language_zulu">
-        isiZulu
-    </string>
-
-    <string name="current_language">
-        Huidige taal
-    </string>
-
-    <string name="use_system_language">
-        Gebruik toestel se taal
-    </string>
-
-</resources>
+res/
+│
+├── values/
+│   └── strings.xml
+│
+└── values-zu/
+    └── strings.xml
 ```
 
 ---
 
-# 🇿🇦 9. Create the isiZulu Resource Directory
+# 📝 10. Add the isiZulu Strings
 
-Create another locale-specific `values` resource directory.
+The **resource names must remain identical** to those in the English file.
 
-The language code for isiZulu is:
+For example, English uses:
 
-```text
-zu
+```xml
+<string name="screen_title">
+    Language Settings
+</string>
 ```
 
-The directory should therefore be:
+Therefore, isiZulu must also use:
 
-```text
-values-zu/
+```xml
+<string name="screen_title">
+    ...
+</string>
 ```
 
-Inside it, create:
+Do **not** create:
 
-```text
-strings.xml
+```xml
+<string name="screen_title_zulu">
 ```
 
-Use the same resource names again.
+Android knows which translation to load from the directory qualifier.
 
-For example:
+Use:
 
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
+
 <resources>
 
+    <!--
+        ISIZULU FALLBACK
+
+        ML Kit Translation does not currently support isiZulu.
+
+        Therefore Android's normal resource localisation
+        system is used for this language.
+    -->
+
     <string name="app_name">
-        Uhlelo Lwezilimi Eziningi
+        Uhlelo Lwezilimi
     </string>
 
     <string name="screen_title">
@@ -516,32 +769,52 @@ For example:
     </string>
 
     <string name="welcome_message">
-        Siyakwamukela kuhlelo lwethu!
+        Siyakwamukela kuhlelo lwethu lwezilimi eziningi.
     </string>
 
     <string name="description">
-        Khetha ulimi ongathanda ukulusebenzisa.
+        Khetha ulimi oluthandayo.
     </string>
 
     <string name="choose_language">
-        Khetha ulimi
+        Khetha ulimi:
     </string>
 
-    <string name="language_english">
+
+    <!-- Language buttons -->
+
+    <string name="english">
         IsiNgisi
     </string>
 
-    <string name="language_afrikaans">
+    <string name="afrikaans">
         IsiBhunu
     </string>
 
-    <string name="language_zulu">
+    <string name="zulu">
         isiZulu
     </string>
 
+
+    <!-- Current language -->
+
     <string name="current_language">
-        Ulimi lwamanje
+        Ulimi Lwamanje
     </string>
+
+
+    <!-- Translation messages -->
+
+    <string name="preparing_translation">
+        Kulungiselelwa ukuhumusha...
+    </string>
+
+    <string name="translation_failed">
+        Ukuhumusha akuphumelelanga.
+    </string>
+
+
+    <!-- Device language -->
 
     <string name="use_system_language">
         Sebenzisa ulimi lwedivayisi
@@ -550,155 +823,97 @@ For example:
 </resources>
 ```
 
-> ⚠️ In a production application, translations should ideally be checked by fluent speakers rather than relying entirely on machine translation.
+For a production application, translated content should be reviewed by a fluent speaker.
 
 ---
 
-# 📁 10. Check the Resource Structure
+# 🔎 11. Understand How Android Finds the Correct Resources
 
-Your resources should now resemble:
+At this stage:
 
 ```text
 res/
-|
-|-> values/
-|   |-> strings.xml
-|
-|-> values-af/
-|   |-> strings.xml
-|
-|-> values-zu/
-|   |-> strings.xml
+│
+├── values/
+│   └── strings.xml
+│
+└── values-zu/
+    └── strings.xml
 ```
 
-Each `strings.xml` should use matching resource names.
+The directory names have meaning.
 
-For example:
+## `values`
 
 ```text
-values/strings.xml
--> welcome_message
-
-values-af/strings.xml
--> welcome_message
-
-values-zu/strings.xml
--> welcome_message
+values/
 ```
 
-The String **name remains the same**.
+contains the default resources.
 
-The String **value changes according to language**.
-
----
-
-# 🧠 11. Understand How Android Selects the Translation
-
-Your Kotlin UI will request a String resource by its resource ID.
-
-Android then determines which resource directory best matches the current locale.
-
-Conceptually:
+In this application:
 
 ```text
-UI requests welcome_message
--> Android checks current locale
--> Matching resource directory selected
--> Correct translated value returned
+values
+-> English
 ```
 
-For example:
+## `values-zu`
+
+The:
 
 ```text
-Current locale:
-English
-
--> values/
+-zu
 ```
 
-```text
-Current locale:
-Afrikaans
+qualifier represents the isiZulu language code.
 
--> values-af/
+Therefore:
+
+```text
+values-zu
+-> isiZulu
 ```
 
-```text
-Current locale:
-isiZulu
-
--> values-zu/
-```
-
-The Compose screen does not require separate versions for every language.
-
----
-
-# 🌍 12. Understand Language Tags
-
-Each language is represented by a standard language tag.
-
-For this demo:
+If Android's application locale becomes:
 
 ```text
-English
--> en
-
-Afrikaans
--> af
-
-isiZulu
--> zu
-```
-
-You may also encounter regional tags.
-
-Examples:
-
-```text
-English - South Africa
--> en-ZA
-
-English - United Kingdom
--> en-GB
-
-English - United States
--> en-US
-```
-
-For this activity, you only need:
-
-```text
-en
-af
 zu
 ```
 
+Android automatically attempts to load resources from:
+
+```text
+values-zu/
+```
+
+You do not manually open the XML file from Kotlin.
+
 ---
 
-# 🌍 13. Declare the Supported Application Locales
+# 🌍 12. Declare the Supported Locales
 
-Android should know which languages the application officially supports.
-
-Inside:
+Create:
 
 ```text
-app/src/main/res/xml/
+res/
+└── xml/
+    └── locales_config.xml
 ```
 
-create:
-
-```text
-locales_config.xml
-```
-
-If the `xml` directory does not exist:
+If `xml` does not exist:
 
 ```text
 res
 -> New
 -> Android Resource Directory
--> Resource Type: xml
+-> Resource type: xml
+```
+
+Then create:
+
+```text
+locales_config.xml
 ```
 
 Add:
@@ -706,74 +921,77 @@ Add:
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
 
-<locale-config xmlns:android="http://schemas.android.com/apk/res/android">
+<locale-config
+    xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <!-- English -->
     <locale android:name="en" />
 
+    <!--
+        Afrikaans is supported by the application.
+
+        In this activity the actual text translation
+        is performed dynamically using ML Kit.
+    -->
     <locale android:name="af" />
 
+    <!--
+        isiZulu uses Android resource localisation.
+    -->
     <locale android:name="zu" />
 
 </locale-config>
 ```
 
-This declares:
+The language tags are:
 
-```text
-English
-Afrikaans
-isiZulu
-```
-
-as supported application locales.
-
-Android uses BCP 47 language tags in this configuration. :contentReference[oaicite:3]{index=3}
+| Language  |  Tag |
+| --------- | ---: |
+| English   | `en` |
+| Afrikaans | `af` |
+| isiZulu   | `zu` |
 
 ---
 
-# 📜 14. Reference the Locale Configuration in the Manifest
+# 📜 13. Register the Locale Configuration
 
 Open:
 
 ```text
-app/src/main/AndroidManifest.xml
+AndroidManifest.xml
 ```
 
-Inside the:
-
-```xml
-<application>
-```
-
-element, reference the locale configuration.
-
-Add:
+Inside `<application>`, add:
 
 ```xml
 android:localeConfig="@xml/locales_config"
 ```
 
-Your `<application>` element should therefore include the locale configuration alongside the application's existing attributes.
+For example:
 
-Android's `android:localeConfig` manifest attribute references an XML resource containing the application's supported locales. :contentReference[oaicite:4]{index=4}
+```xml
+<application
+
+    android:localeConfig="@xml/locales_config"
+
+    ... >
+
+</application>
+```
+
+This tells Android which locales your application supports.
 
 ---
 
-# 🔄 15. Configure Locale Storage for Older Android Versions
+# 💾 14. Configure AppCompat Locale Storage
 
-Android 13 and later automatically persist application-level locale preferences when using the per-app locale APIs.
-
-For earlier Android versions, AppCompat can automatically store the selected application locale.
-
-Inside the:
+Inside `<application>`, add:
 
 ```xml
-<application>
-```
-
-element, add:
-
-```xml
+<!--
+    Allows AppCompat to store application locale
+    information where required on older Android versions.
+-->
 <service
     android:name="androidx.appcompat.app.AppLocalesMetadataHolderService"
     android:enabled="false"
@@ -786,889 +1004,1408 @@ element, add:
 </service>
 ```
 
-You are **not creating this service yourself**.
+Do not replace your complete Manifest.
 
-It is supplied by AppCompat.
-
-Its purpose is to allow AppCompat to persist app-level locale selections on older Android versions.
-
-On Android 13 and later, AppCompat handles application-locale storage through the platform automatically. :contentReference[oaicite:5]{index=5}
+Add these elements to your **existing** Manifest.
 
 ---
 
-# 📱 16. Use an AppCompat-Compatible Activity
+# 📱 15. Make `MainActivity` AppCompat-Compatible
 
-The demo uses:
+Your activity may currently extend:
 
-```text
-AppCompatDelegate
+```kotlin
+class MainActivity : ComponentActivity()
 ```
 
-for per-app locale support.
+For this activity, use:
 
-Your Activity should therefore use an AppCompat-compatible Activity setup.
-
-Change the Activity superclass from:
-
-```text
-ComponentActivity
+```kotlin
+class MainActivity : AppCompatActivity()
 ```
 
-to:
+Add:
 
-```text
-AppCompatActivity
+```kotlin
+import androidx.appcompat.app.AppCompatActivity
 ```
 
-You can still use Jetpack Compose normally inside an `AppCompatActivity`.
+You can still use Compose normally:
 
-Make sure the required AppCompat import is added.
+```kotlin
+setContent {
+
+    // Your Compose UI
+
+}
+```
+
+AppCompat is being introduced because you will work with Android's application locale functionality.
 
 ---
 
-# 🎨 17. Create the Language Selection Interface
+# 🗂️ 16. Organise the Project
 
-Create a Compose screen for selecting the application's language.
+Do not place the entire implementation inside `MainActivity.kt`.
 
-The screen should include:
+Your project should eventually resemble:
 
 ```text
-Title
-
-Welcome message
-
-Short description
-
-English option
-
-Afrikaans option
-
-isiZulu option
-
-Use device language option
+java/com/example/languagedemo/
+│
+├── MainActivity.kt
+├── LanguageScreen.kt
+├── LanguageUiState.kt
+├── MlKitTranslationManager.kt
+└── AppLanguageManager.kt
 ```
 
-You may use:
+Each class/file should have a specific responsibility.
 
-- Buttons.
-- Radio buttons.
-- A dropdown.
-- Cards.
-- A Settings-style list.
+### `MainActivity.kt`
 
-The exact visual design is your choice.
+Coordinates the application.
+
+It should respond to:
+
+```text
+English selected
+Afrikaans selected
+isiZulu selected
+Device language selected
+```
+
+### `LanguageScreen.kt`
+
+Contains the Jetpack Compose interface.
+
+### `LanguageUiState.kt`
+
+Stores the text currently displayed by the interface.
+
+### `MlKitTranslationManager.kt`
+
+Handles communication with ML Kit Translation.
+
+### `AppLanguageManager.kt`
+
+Handles Android application locale changes.
 
 ---
 
-# 📝 18. Load All Visible Text from String Resources
+# 🧠 17. Create the UI State
 
-Every localisable piece of text on the screen must be loaded from the appropriate Android String resource.
-
-Do not hardcode:
+Create:
 
 ```text
-Welcome
+LanguageUiState.kt
+```
 
-Settings
+The UI needs somewhere to store the text currently being displayed.
 
+You may begin with:
+
+```kotlin
+data class LanguageUiState(
+
+    /*
+     * Text displayed as the main screen heading.
+     */
+    val screenTitle: String,
+
+
+    /*
+     * Main welcome message.
+     */
+    val welcomeMessage: String,
+
+
+    /*
+     * Description displayed below the welcome message.
+     */
+    val description: String,
+
+
+    /*
+     * Continue adding the remaining Strings
+     * required by your interface.
+     */
+
+)
+```
+
+Students must complete the remaining properties.
+
+Consider:
+
+```text
+screen title
+
+welcome message
+
+description
+
+choose-language label
+
+English button label
+
+Afrikaans button label
+
+isiZulu button label
+
+current-language label
+
+device-language label
+```
+
+---
+
+# 🤔 18. Why Do We Need UI State for Afrikaans?
+
+With normal Android localisation, Compose can use:
+
+```kotlin
+stringResource(
+    R.string.screen_title
+)
+```
+
+Android then selects the correct resource.
+
+But Afrikaans is different in this activity.
+
+There is no:
+
+```text
+values-af/strings.xml
+```
+
+Instead:
+
+```text
+"Language Settings"
+        |
+        v
+ML Kit
+        |
+        v
+Afrikaans result
+        |
+        v
+Store result in Compose state
+        |
+        v
+Compose recomposes
+```
+
+Therefore, the UI needs somewhere to store the dynamically generated translations.
+
+---
+
+# 🤖 19. Create the ML Kit Translation Manager
+
+Create:
+
+```text
+MlKitTranslationManager.kt
+```
+
+This class should be responsible specifically for **automatic translation**.
+
+You will need classes including:
+
+```kotlin
+import com.google.mlkit.common.model.DownloadConditions
+
+import com.google.mlkit.nl.translate.TranslateLanguage
+
+import com.google.mlkit.nl.translate.Translation
+
+import com.google.mlkit.nl.translate.Translator
+
+import com.google.mlkit.nl.translate.TranslatorOptions
+```
+
+Do not place all ML Kit operations directly inside your Compose screen.
+
+---
+
+# ⚙️ 20. Configure the Translator
+
+Research:
+
+```text
+TranslatorOptions.Builder()
+```
+
+Your translator must be configured as:
+
+```text
+SOURCE
 English
 
+TARGET
 Afrikaans
-
-isiZulu
 ```
 
-directly inside the Compose UI.
+ML Kit provides language constants such as:
 
-Use Android's Compose String resource functionality instead.
+```kotlin
+TranslateLanguage.ENGLISH
+```
+
+and:
+
+```kotlin
+TranslateLanguage.AFRIKAANS
+```
+
+Your general configuration should therefore follow:
+
+```text
+TranslatorOptions
+-> source = English
+-> target = Afrikaans
+-> build configuration
+-> create Translator
+```
 
 ### 📚 Helpful Resource
 
-**Android — Resources in Compose:**  
-https://developer.android.com/develop/ui/compose/resources
-
-Focus on:
-
-```text
-stringResource()
-```
+[ML Kit — Translation Implementation Guide](https://developers.google.com/ml-kit/language/translation/android?)
 
 ---
 
-# 🧠 19. Create the Language Selection Logic
+# 📥 21. Prepare the Afrikaans Translation Model
 
-You now need to implement the behaviour that changes the application locale.
+Creating a `Translator` does not necessarily mean that the Afrikaans model already exists on the device.
 
-Your language logic must support:
+Your application must prepare it.
 
-```text
-English
--> en
-
-Afrikaans
--> af
-
-isiZulu
--> zu
-```
-
-When the user selects a language:
-
-1. Determine the language tag.
-2. Create an application locale list.
-3. Apply the locale through AppCompat's application-locale functionality.
-4. Allow Android to process the resulting configuration change.
-5. Reload the translated String resources.
-
-You will need to research:
+Research:
 
 ```text
-LocaleListCompat
-
-AppCompatDelegate.setApplicationLocales()
+downloadModelIfNeeded()
 ```
 
-### 📚 Helpful Resources
-
-**AppCompatDelegate:**  
-https://developer.android.com/reference/kotlin/androidx/appcompat/app/AppCompatDelegate
-
-**LocaleListCompat:**  
-https://developer.android.com/reference/androidx/core/os/LocaleListCompat
-
-Focus on:
-
-```text
-forLanguageTags()
-
-setApplicationLocales()
-```
-
-Do not manually replace every Text value when the user selects a language.
-
----
-
-# 🔁 20. Understand What Happens When the Language Changes
-
-When the application locale changes, Android performs a configuration change.
-
-This may recreate the Activity.
-
-This behaviour is normal.
-
-Conceptually:
+Your implementation should follow:
 
 ```text
 User selects Afrikaans
--> App locale becomes "af"
--> Android configuration changes
--> Activity may be recreated
--> Resources load again
--> values-af selected
--> Afrikaans UI displayed
+        |
+        v
+Prepare Translator
+        |
+        v
+Check Afrikaans model
+        |
+        v
+     Available?
+      /     \
+    YES      NO
+     |        |
+     |     Download
+     |        |
+      \      /
+        v   v
+      Model ready
+          |
+          v
+       Translate
 ```
-
-You should not attempt to manually translate every existing composable after the selection.
-
-Android's resource system performs that work.
-
-Changing application locales may cause attached components to receive a configuration change and potentially be recreated. :contentReference[oaicite:6]{index=6}
 
 ---
 
-# 📱 21. Add a "Use Device Language" Option
+# 📶 22. Configure Download Conditions
 
-The user should be able to remove their application-specific language choice.
+Research:
 
-When this option is selected:
-
-```text
-ParkSmart/app locale preference removed
--> Application follows device language
+```kotlin
+DownloadConditions.Builder()
 ```
 
-Research how an:
+For this classroom activity, the model may download using the available Internet connection.
+
+In a production application, you may investigate:
 
 ```text
-empty LocaleListCompat
+requireWifi()
 ```
 
-can be passed to AppCompat's application-locale API to return the application to the system locale.
+This can be useful because translation models take up storage and downloading them uses data.
 
-### 📚 Resource
-
-https://developer.android.com/reference/kotlin/androidx/appcompat/app/AppCompatDelegate
+The first time Afrikaans is selected may therefore take longer than subsequent translations.
 
 ---
 
-# 🧭 22. Consider Separating Language Logic from the UI
+# 🔤 23. Implement the Translation Operation
 
-Do not place every localisation operation directly inside each language button.
-
-A cleaner design is to create a dedicated language-management class/object responsible for:
+Your translation manager should accept:
 
 ```text
-Changing app language
-
-Returning to system language
-
-Reading current app language
+English text
 ```
 
-The Compose screen should mainly be responsible for:
+and eventually provide:
 
 ```text
-Displaying language choices
--> Reporting user selection
+Afrikaans text
 ```
 
-while the language-management functionality handles the locale operation.
+Research:
 
-You are responsible for deciding the exact class name and structure.
+```text
+translator.translate(...)
+```
+
+ML Kit translation is **asynchronous**.
+
+That means this assumption is incorrect:
+
+```text
+Call translate()
+-> immediately receive String
+```
+
+The actual flow is:
+
+```text
+Request translation
+        |
+        v
+ML Kit processes text
+        |
+        v
+   ----------------
+   |              |
+Success         Failure
+   |              |
+   v              v
+Use result    Handle error
+```
+
+Your implementation must handle **both success and failure**.
 
 ---
 
-# ▶️ 23. Test the Default English Resources
+# 🔒 24. Release the Translator
 
-Run the application.
+ML Kit's `Translator` uses resources that should be released when they are no longer required.
 
-Set or confirm the language as:
+Research:
 
 ```text
-English
+translator.close()
 ```
 
-Verify that the application displays the English resources.
+Consider the Android Activity lifecycle.
 
 For example:
 
 ```text
+Activity created
+-> Translator used
+-> Activity destroyed
+-> Translator no longer required
+-> Release resources
+```
+
+---
+
+# 🌐 25. Create the Application Language Manager
+
+Create:
+
+```text
+AppLanguageManager.kt
+```
+
+This component should handle Android's **resource-based locale system**.
+
+Research:
+
+```kotlin
+LocaleListCompat.forLanguageTags(...)
+```
+
+and:
+
+```kotlin
+AppCompatDelegate.setApplicationLocales(...)
+```
+
+### Language tags
+
+You will work with:
+
+```text
+English:
+en
+
+isiZulu:
+zu
+```
+
+Afrikaans is intentionally handled differently because it is being translated dynamically with ML Kit.
+
+### 📚 Helpful Resources
+
+[AppCompatDelegate Reference](https://developer.android.com/reference/androidx/appcompat/app/AppCompatDelegate?)
+
+[LocaleListCompat Reference](https://developer.android.com/reference/androidx/core/os/LocaleListCompat?)
+
+---
+
+# 📱 26. Build the Compose Screen
+
+Create:
+
+```text
+LanguageScreen.kt
+```
+
+Your interface should contain at least:
+
+```text
 Language Settings
 
-Welcome to our application!
+Welcome to our multi-language app.
 
-Choose the language you would like to use.
+Choose your preferred language.
+
+Choose language:
+
+[ English ]
+
+[ Afrikaans ]
+
+[ isiZulu ]
+
+[ Use Device Language ]
+
+Current Language: English
+```
+
+You may design the interface yourself.
+
+The exact:
+
+```text
+colours
+spacing
+typography
+button arrangement
+icons
+```
+
+are not prescribed.
+
+However, the user must clearly be able to select each supported language.
+
+---
+
+# 🔗 27. Connect `LanguageUiState` to the Screen
+
+Your Compose screen should receive a:
+
+```text
+LanguageUiState
+```
+
+rather than hardcoding all text.
+
+Conceptually:
+
+```text
+LanguageUiState
+        |
+        v
+LanguageScreen
+        |
+        v
+Compose Text / Buttons
+```
+
+When ML Kit completes translation:
+
+```text
+Old English UI State
+        |
+        v
+New Afrikaans UI State
+        |
+        v
+Compose detects state change
+        |
+        v
+Recomposition
+        |
+        v
+Afrikaans interface appears
 ```
 
 ---
 
-# 🇿🇦 24. Test Afrikaans
+# 🇬🇧 28. Implement English Selection
 
-Choose:
-
-```text
-Afrikaans
-```
-
-Expected flow:
-
-```text
-Select Afrikaans
--> Application locale becomes "af"
--> Android reloads resources
--> values-af selected
-```
-
-Confirm that all translated text changes.
-
-Look carefully for text that remains English.
-
-Any remaining English text may indicate:
-
-- Hardcoded text.
-- A missing translation.
-- An incorrectly named String resource.
-
----
-
-# 🇿🇦 25. Test isiZulu
-
-Choose:
-
-```text
-isiZulu
-```
-
-Expected:
-
-```text
-Locale:
-zu
-
-->
-
-Resources:
-values-zu
-```
-
-Confirm that the screen uses the isiZulu translations.
-
----
-
-# 📱 26. Test Returning to the Device Language
-
-Select:
-
-```text
-Use device language
-```
-
-The application should stop forcing one of its own language preferences.
-
-It should then follow the device language where an appropriate translated resource exists.
-
----
-
-# 🔁 27. Test Language Persistence
-
-Perform:
-
-```text
-Select Afrikaans
--> Close application
--> Reopen application
-```
-
-Confirm that the application language behaves correctly according to the per-app language configuration.
-
-Then repeat with isiZulu.
-
-Per-app locale choices are persisted by the platform on Android 13+, while AppCompat can provide storage for earlier versions when configured. :contentReference[oaicite:7]{index=7}
-
----
-
-# 📱 28. Test Android 13+ App Language Settings
-
-On Android 13 or later, open the application's system settings.
-
-Depending on the Android version/device manufacturer, look for:
-
-```text
-Settings
--> Apps
--> Multi-Language Demo
--> Language
-```
-
-or a similar App Languages section.
-
-Confirm that the supported languages include:
+When:
 
 ```text
 English
+```
 
+is selected, the application should return to the English resource set.
+
+The flow should be:
+
+```text
+User selects English
+-> application locale becomes en
+-> Android loads default resources
+-> values/strings.xml
+-> English UI displayed
+```
+
+Do not create another copy of all the English text inside Kotlin.
+
+Your source already exists in:
+
+```text
+values/strings.xml
+```
+
+---
+
+# 🤖 29. Implement Afrikaans Selection
+
+This is the main ML Kit part of the activity.
+
+When the user selects:
+
+```text
 Afrikaans
+```
 
+the intended process is:
+
+```text
+User selects Afrikaans
+        |
+        v
+Obtain ORIGINAL English Strings
+        |
+        v
+Check Afrikaans ML Kit model
+        |
+        v
+Download if required
+        |
+        v
+Translate English Strings
+        |
+        v
+Collect translation results
+        |
+        v
+Update LanguageUiState
+        |
+        v
+Compose recomposes
+        |
+        v
+Afrikaans displayed
+```
+
+The source text should come from resources such as:
+
+```text
+R.string.screen_title
+
+R.string.welcome_message
+
+R.string.description
+
+R.string.choose_language
+
+R.string.english
+
+R.string.afrikaans
+
+R.string.zulu
+
+R.string.current_language
+```
+
+---
+
+# 📚 30. Translate a Collection of User-Facing Strings
+
+ML Kit does **not automatically scan your Compose screen**.
+
+It does not do this:
+
+```text
+Find every Text()
+-> translate it automatically
+```
+
+Your application must provide the strings to be translated.
+
+You may start by creating a collection:
+
+```kotlin
+val stringsToTranslate = listOf(
+
+    /*
+     * Retrieve the original English Strings
+     * from Android resources.
+     */
+
+    getString(R.string.screen_title),
+
+    getString(R.string.welcome_message),
+
+    getString(R.string.description)
+
+    // Continue with the remaining Strings.
+)
+```
+
+Students must determine which remaining user-facing strings need translation.
+
+---
+
+# ⏳ 31. Wait for All Translations
+
+Suppose your interface contains eight strings.
+
+ML Kit translation operations are asynchronous.
+
+You should therefore not assume:
+
+```text
+Translation 1
+-> finishes first
+
+Translation 2
+-> finishes second
+
+Translation 3
+-> finishes third
+```
+
+Your implementation should preserve the relationship between each source string and its translation.
+
+Ideally:
+
+```text
+Start translation requests
+        |
+        v
+Collect translated results
+        |
+        v
+Have all required translations completed?
+        |
+     ---------
+     |       |
+    NO      YES
+     |       |
+    Wait     v
+        Create new UI state
+             |
+             v
+        Update screen
+```
+
+---
+
+# 🎨 32. Avoid a Half-Translated Interface
+
+Do not immediately update the screen every time one translation finishes.
+
+Otherwise, users may briefly see:
+
+```text
+Afrikaans heading
+
+English description
+
+Afrikaans button
+
+English label
+
+Afrikaans message
+```
+
+Instead:
+
+```text
+Translate required Strings
+-> collect results
+-> wait for completion
+-> update LanguageUiState once
+-> complete Afrikaans interface appears
+```
+
+---
+
+# ⏱️ 33. Add a Loading State
+
+The first Afrikaans translation may require a language model download.
+
+The interface should tell the user that something is happening.
+
+For example:
+
+```text
+Preparing translation...
+
+        ⟳
+```
+
+Jetpack Compose provides:
+
+```kotlin
+CircularProgressIndicator()
+```
+
+Consider a state such as:
+
+```text
+isLoading
+```
+
+Your application should conceptually follow:
+
+```text
+Afrikaans selected
+-> isLoading = true
+
+Translation/model preparation
+-> loading indicator displayed
+
+Translation succeeds or fails
+-> isLoading = false
+```
+
+---
+
+# 🚫 34. Prevent Repeated Requests
+
+While translation is occurring, users should not be able to repeatedly request another translation.
+
+For example:
+
+```text
+Afrikaans
+Afrikaans
+Afrikaans
+Afrikaans
+```
+
+should not result in four unnecessary translation processes.
+
+Compose `Button` provides:
+
+```kotlin
+enabled = ...
+```
+
+Use your loading/application state to determine when controls should temporarily be disabled.
+
+---
+
+# 🇿🇦 35. Implement the isiZulu Fallback
+
+When the user selects:
+
+```text
 isiZulu
 ```
 
-Android 13 introduced a system location where users can select preferred languages for individual applications. :contentReference[oaicite:8]{index=8}
+do **not** send the English strings to ML Kit.
+
+Instead:
+
+```text
+User selects isiZulu
+        |
+        v
+Set application locale to zu
+        |
+        v
+Android detects locale change
+        |
+        v
+Android searches resources
+        |
+        v
+values-zu/strings.xml
+        |
+        v
+isiZulu interface displayed
+```
+
+This demonstrates your **fallback mechanism**.
 
 ---
 
-# 🔄 29. Test Changing the Language Outside the App
+# 🔄 36. Understand Activity Recreation
 
-On Android 13+:
+Changing the application locale can result in the Activity being recreated.
 
-1. Close or minimise the application.
-2. Open Android's App Language settings.
-3. Change the app language.
-4. Return to the application.
+This is expected Android behaviour.
 
-The UI should use the newly selected language.
+For example:
 
-Your in-app selector and Android's per-app language settings should represent the same underlying app language preference.
+```text
+Current locale:
+en
+
+        |
+
+User selects isiZulu
+
+        |
+
+Locale:
+zu
+
+        |
+
+Configuration changes
+
+        |
+
+Activity recreated
+
+        |
+
+values-zu resources loaded
+```
+
+Your application must therefore be able to reconstruct its interface correctly.
+
+Do not treat Activity recreation during a locale change as an application failure.
 
 ---
 
-# 📝 30. Handle Strings Containing Dynamic Information
+# ⚠️ 37. Handle isiZulu -> Afrikaans Carefully
 
-Not every String is static.
+This is one of the most important problems in the activity.
 
-Consider:
-
-```text
-Welcome, Talia!
-```
-
-The user's name is dynamic.
-
-Avoid building localised sentences using several hardcoded pieces.
-
-For example, avoid:
+Imagine:
 
 ```text
-"Welcome " + name
+Current language:
+isiZulu
 ```
 
-Instead, create a formatted String resource.
+Android is currently loading:
 
-The default resource might contain:
-
-```xml
-<string name="welcome_user">
-    Welcome, %1$s!
-</string>
+```text
+values-zu/strings.xml
 ```
 
-Each language can then define its own translation while keeping the placeholder.
+The user now selects:
 
-The Compose UI supplies the user's name when retrieving the resource.
+```text
+Afrikaans
+```
 
-This allows each language to control its own sentence structure.
+Your ML Kit Translator is configured as:
 
-### 📚 Helpful Resource
+```text
+English
+-> Afrikaans
+```
 
-**Android — String Resources:**  
-https://developer.android.com/guide/topics/resources/string-resource
+Therefore, you should **not accidentally send isiZulu text into an English-source translator**.
+
+Your solution needs to ensure:
+
+```text
+isiZulu currently active
+        |
+        v
+User selects Afrikaans
+        |
+        v
+Return to English source
+        |
+        v
+Retrieve English Strings
+        |
+        v
+ML Kit English -> Afrikaans
+        |
+        v
+Display Afrikaans
+```
+
+Students must determine an appropriate way to manage this transition.
+
+Possible concepts worth investigating include:
+
+```text
+ViewModel
+
+Saved state
+
+DataStore
+
+pending language selection
+
+application preferences
+```
 
 ---
 
-# 🔢 31. Understand Plural Resources
+# 📱 38. Implement "Use Device Language"
 
-Consider:
+Your language screen should also contain:
 
 ```text
-1 parking bay available
+Use Device Language
+```
+
+This option means:
+
+> Stop forcing a specific application locale and allow Android to determine the appropriate language from the user's device/system preferences.
+
+Research how an **empty locale list** can be used with:
+
+```text
+AppCompatDelegate.setApplicationLocales()
+```
+
+to return control to the system locale.
+
+Consider what should happen if the device language is:
+
+```text
+English
+```
+
+versus:
+
+```text
+isiZulu
+```
+
+Also consider what should happen if the device uses a language for which your application does not provide translated resources.
+
+Android should be able to fall back to the default resources where necessary.
+
+---
+
+# 💾 39. Preserve the Selected Language
+
+Users should not unnecessarily lose their chosen application language every time they close the application.
+
+Test:
+
+```text
+Choose isiZulu
+-> close application
+-> reopen application
 ```
 
 and:
 
 ```text
-5 parking bays available
+Choose Afrikaans
+-> close application
+-> reopen application
 ```
 
-Different languages may have different pluralisation rules.
+There is an important difference here.
 
-Do not assume that adding:
+Resource-based application locales can be managed by Android/AppCompat.
+
+However, your Afrikaans implementation is **dynamic ML Kit state**, not a `values-af` resource set.
+
+Therefore, consider how your application should remember:
 
 ```text
-s
+Last selected language:
+Afrikaans
 ```
 
-is sufficient.
+and restore the appropriate behaviour when the application starts again.
 
-Android supports plural resources using:
+An appropriate persistence mechanism may include:
 
 ```text
-<plurals>
+DataStore
 ```
 
-For example:
-
-```xml
-<plurals name="parking_bays_available">
-
-    <item quantity="one">
-        %d parking bay available
-    </item>
-
-    <item quantity="other">
-        %d parking bays available
-    </item>
-
-</plurals>
-```
-
-For applications with quantities, create translated plural resources for each supported language.
-
-### 📚 Helpful Resource
-
-**Android — Quantity Strings:**  
-https://developer.android.com/guide/topics/resources/string-resource#Plurals
+Students should investigate how to persist a small language preference.
 
 ---
 
-# 📅 32. Remember That Localisation Includes Dates and Times
+# ❌ 40. Handle Translation Errors
 
-Localisation is not only:
+Automatic translation can fail.
+
+Possible causes include:
+
+```text
+No Internet connection when model is required
+
+Language model download failure
+
+Insufficient device storage
+
+Translation failure
+
+Unexpected lifecycle changes
+```
+
+The application should **not crash**.
+
+Instead, provide appropriate feedback.
+
+You already have:
+
+```xml
+<string name="translation_failed">
+    Automatic translation failed.
+</string>
+```
+
+You should also log the underlying error during development.
+
+---
+
+# 🪵 41. Use Logcat to Follow the Process
+
+Add meaningful Logcat messages while implementing the activity.
+
+Your logs could show:
+
+```text
+LanguageDemo: Afrikaans selected
+
+LanguageDemo: Checking Afrikaans model
+
+LanguageDemo: Downloading model
+
+LanguageDemo: Afrikaans model ready
+
+LanguageDemo: Starting translation
+
+LanguageDemo: Translation completed
+
+LanguageDemo: isiZulu selected
+
+LanguageDemo: Changing application locale to zu
+
+LanguageDemo: Translation failed
+```
+
+This will help you understand the order in which asynchronous operations occur.
+
+---
+
+# 🧪 42. Test English
+
+Start the application.
+
+The default interface should display something similar to:
+
+```text
+Language Settings
+
+Welcome to our multi-language app.
+
+Choose your preferred language.
+
+Choose language:
+
+[ English ]
+
+[ Afrikaans ]
+
+[ isiZulu ]
+
+[ Use Device Language ]
+
+Current Language: English
+```
+
+Verify that the text comes from:
+
+```text
+res/values/strings.xml
+```
+
+---
+
+# 🧪 43. Test Afrikaans Automatic Translation
+
+Select:
+
+```text
+Afrikaans
+```
+
+Verify:
+
+```text
+Afrikaans selected
+-> model checked
+-> model downloaded if necessary
+-> English Strings translated
+-> translated results collected
+-> UI state updated
+-> Compose recomposes
+-> Afrikaans displayed
+```
+
+There should deliberately be **no**:
+
+```text
+values-af/strings.xml
+```
+
+for this activity.
+
+That is how you can demonstrate that the Afrikaans text is being generated dynamically.
+
+---
+
+# 📴 44. Test Afrikaans Offline
+
+Once the Afrikaans model has successfully downloaded:
+
+1. Close the application.
+2. Disable Internet access on the emulator/device.
+3. Reopen the application.
+4. Select Afrikaans again.
+5. Observe what happens.
+
+This demonstrates the difference between:
+
+```text
+Cloud translation
+```
+
+and:
+
+```text
+On-device translation model
+```
+
+---
+
+# 🧪 45. Test isiZulu
+
+Select:
+
+```text
+isiZulu
+```
+
+Verify:
+
+```text
+Locale changes to zu
+-> resources reload
+-> values-zu/strings.xml selected
+-> isiZulu displayed
+```
+
+ML Kit should **not** be required for this process.
+
+---
+
+# 🔄 46. Test Every Language Transition
+
+Do not test only:
 
 ```text
 English -> Afrikaans
 ```
 
-Regional preferences can also affect:
+Test all important combinations:
 
 ```text
-Dates
+English -> Afrikaans
 
-Times
+Afrikaans -> English
 
-Numbers
+English -> isiZulu
 
-Currency
+isiZulu -> English
+
+Afrikaans -> isiZulu
+
+isiZulu -> Afrikaans
+
+English -> Device Language
+
+isiZulu -> Device Language
+
+Afrikaans -> Device Language
 ```
 
-For example:
+Pay particular attention to:
 
 ```text
-25/08/2026
+isiZulu -> Afrikaans
 ```
 
-and:
-
-```text
-08/25/2026
-```
-
-can represent different regional formatting conventions.
-
-Avoid manually hardcoding regional display formats without considering the user's locale.
+because ML Kit expects the source text to be English.
 
 ---
 
-# 💰 33. Localisation Also Affects Numbers and Currency
+# 🔁 47. Test Application Restart
 
-Different locales may use different conventions for:
+For each language:
 
 ```text
-Decimal separators
-
-Thousands separators
-
-Currency symbols
-
-Currency positioning
+Select language
+-> close application
+-> reopen application
+-> check displayed language
 ```
 
-For example, a value may be displayed differently depending on locale.
+Test:
 
-When your applications later work with currency, measurements or numbers, use locale-aware formatting rather than manually inserting symbols and separators.
+```text
+English
+
+Afrikaans
+
+isiZulu
+
+Device language
+```
+
+Your application should behave consistently and should not unexpectedly display a different language.
 
 ---
 
-# ↔️ 34. Consider Right-to-Left Languages
+# 📂 48. Expected Project Structure
 
-English, Afrikaans and isiZulu are written left-to-right.
-
-Other languages, such as Arabic and Hebrew, are commonly written right-to-left.
-
-Android supports RTL layout behaviour.
-
-Your manifest should normally support:
-
-```xml
-android:supportsRtl="true"
-```
-
-When creating layouts, prefer directional terms such as:
+Your completed project should resemble:
 
 ```text
-start
-
-end
+app/
+│
+├── build.gradle.kts
+│
+└── src/
+    └── main/
+        │
+        ├── AndroidManifest.xml
+        │
+        ├── java/com/example/languagedemo/
+        │   │
+        │   ├── MainActivity.kt
+        │   ├── LanguageScreen.kt
+        │   ├── LanguageUiState.kt
+        │   ├── MlKitTranslationManager.kt
+        │   └── AppLanguageManager.kt
+        │
+        └── res/
+            │
+            ├── values/
+            │   └── strings.xml
+            │
+            ├── values-zu/
+            │   └── strings.xml
+            │
+            └── xml/
+                └── locales_config.xml
 ```
 
-rather than assuming:
+Notice that there is intentionally **no**:
 
 ```text
-left
-
-right
+values-af/
 ```
 
-This makes the application easier to adapt to RTL languages later.
+Afrikaans is being used to demonstrate ML Kit automatic translation.
 
 ---
 
-# 🧪 35. Test Missing Translations
+# 🧠 49. Architecture
 
-Temporarily remove one non-essential translated String from one language resource file.
-
-Run the application using that language.
-
-Observe what Android does.
-
-Android can fall back to default resources when a more specific translation is unavailable.
-
-However, your final submission should aim to provide complete translations for important user-facing text.
-
----
-
-# 🚫 36. Do Not Implement Language Switching Manually
-
-Avoid code structures conceptually similar to:
+By the end of the activity, you should understand this architecture:
 
 ```text
-if Afrikaans
--> manually change every Text
-
-else if isiZulu
--> manually change every Text
-
-else
--> manually use English
+                       USER SELECTS LANGUAGE
+                                |
+        ------------------------------------------------
+        |                  |                 |          |
+        v                  v                 v          v
+     ENGLISH           AFRIKAANS          ISIZULU    SYSTEM
+        |                  |                 |          |
+        v                  v                 v          v
+  values/strings      English source     Locale zu   Clear app
+        |                  |                 |        locale
+        |                  v                 v          |
+        |               ML KIT          values-zu      |
+        |                  |                 |          |
+        |                  v                 |          |
+        |          Automatic Afrikaans      |          |
+        |              Translation           |          |
+        |                  |                 |          |
+        --------------------                 |          |
+                 |                           |          |
+                 ---------------------------------------
+                                |
+                                v
+                           COMPOSE UI
 ```
 
-This does not scale.
+The most important lesson from this activity is that **multi-language support does not have to use one single technique**.
 
-Imagine an app containing:
-
-```text
-30 screens
-
-100 Strings
-
-5 languages
-```
-
-Android's resource system exists to avoid this problem.
-
-Use:
+You are combining:
 
 ```text
-Resource IDs
+Android localisation
 +
-Locale-specific resources
+Android per-app languages
++
+ML Kit automatic translation
++
+Fallback resources
++
+Compose state management
 ```
 
-instead.
-
----
-
-# 🐛 Common Problems
-
-## Some Text Does Not Change
-
-Check whether the text is hardcoded.
-
-Search your Compose files for visible text that does not come from a String resource.
-
----
-
-## Afrikaans Does Not Load
-
-Check the directory name.
-
-Use:
-
-```text
-values-af
-```
-
-not:
-
-```text
-values-afrikaans
-```
-
----
-
-## isiZulu Does Not Load
-
-Use:
-
-```text
-values-zu
-```
-
-not:
-
-```text
-values-zulu
-```
-
----
-
-## App Language Option Does Not Appear in Android Settings
-
-Check:
-
-- Device uses Android 13 or later.
-- `locales_config.xml` exists.
-- Locale tags are valid.
-- Manifest references `android:localeConfig`.
-- Application has been rebuilt/reinstalled where necessary.
-
----
-
-## Application Does Not Change Language
-
-Check:
-
-- AppCompat dependency is installed.
-- App uses an AppCompat-compatible Activity.
-- Correct language tag is passed.
-- Application locale API is being called.
-- Translated resources exist.
-
----
-
-## Language Changes but Resets After Restart
-
-Check the AppCompat automatic locale storage configuration for versions below Android 13.
-
----
-
-## App Recreates When Language Changes
-
-This is expected.
-
-Locale changes are configuration changes.
-
-Android may recreate the Activity so that resources can be loaded for the new locale. :contentReference[oaicite:9]{index=9}
-
----
-
-## Some Strings Fall Back to English
-
-Check whether the resource exists inside the translated `strings.xml`.
-
-If it does not, Android may use the default resource.
-
----
-
-# 🧪 Student Extension Activity
-
-Once English, Afrikaans and isiZulu work, add one additional language.
-
-Choose one of:
-
-```text
-French
-
-German
-
-Spanish
-
-Portuguese
-```
-
-You must determine:
-
-- The correct language tag.
-- The correct `values-...` resource directory.
-- The translated String resources.
-- The new entry required in `locales_config.xml`.
-- The additional language option required in the UI.
-- How your language selector should apply the new locale.
-
-Test that all existing languages still work after the new language is added.
-
----
+This gives you an opportunity to compare **traditional localisation** with **automatic runtime translation** and understand the advantages and limitations of both.
 
 # 📚 Helpful Resources
 
-## 🌍 Android Localisation
+### 🤖 ML Kit Translation
 
-**Android — Localise Your App:**  
-https://developer.android.com/guide/topics/resources/localization
+[Google ML Kit — Translate Text on Android](https://developers.google.com/ml-kit/language/translation/android?)
 
-Use this to understand:
+### 🌍 ML Kit Supported Languages
 
-```text
-values/
+[Google ML Kit — Translation Language Support](https://developers.google.com/ml-kit/language/translation/translation-language-support?)
 
-values-af/
+### 📱 Android Localisation
 
-values-zu/
+[Android — Localise Your App](https://developer.android.com/guide/topics/resources/localization?)
 
-resource fallback
+### ⚙️ Per-App Languages
 
-locale-specific resources
-```
+[Android — Per-App Language Preferences](https://developer.android.com/guide/topics/resources/app-languages?)
 
----
+### 🌐 AppCompat Locale Management
 
-## 📱 Per-App Languages
+[Android — AppCompatDelegate Reference](https://developer.android.com/reference/androidx/appcompat/app/AppCompatDelegate?)
 
-**Android — Per-App Language Preferences:**  
-https://developer.android.com/guide/topics/resources/app-languages
+### 🏷️ Locale Lists
 
-Use this for the overall Android per-app language approach.
+[Android — LocaleListCompat Reference](https://developer.android.com/reference/androidx/core/os/LocaleListCompat?)
 
-**Android 13 — App Languages:**  
-https://developer.android.com/about/versions/13/features#app-languages
+### 🎨 Compose String Resources
 
-Android 13 provides system support for app-specific language preferences. :contentReference[oaicite:10]{index=10}
-
----
-
-## 🧩 AppCompat Locale Support
-
-**AppCompatDelegate:**  
-https://developer.android.com/reference/kotlin/androidx/appcompat/app/AppCompatDelegate
-
-Focus on:
-
-```text
-setApplicationLocales()
-
-getApplicationLocales()
-```
-
-`setApplicationLocales()` accepts a `LocaleListCompat`; passing an empty list resets the application to the system locale. :contentReference[oaicite:11]{index=11}
-
----
-
-## 🌐 Locale Lists
-
-**LocaleListCompat:**  
-https://developer.android.com/reference/androidx/core/os/LocaleListCompat
-
-Focus on:
-
-```text
-forLanguageTags()
-
-getEmptyLocaleList()
-```
-
----
-
-## 📜 Supported Locale Configuration
-
-**LocaleConfig:**  
-https://developer.android.com/reference/android/app/LocaleConfig
-
-Use this to understand:
-
-```text
-locales_config.xml
-
-BCP 47 language tags
-```
-
-The locale configuration can be supplied through an XML `<locale-config>` resource referenced by `android:localeConfig`. :contentReference[oaicite:12]{index=12}
-
----
-
-## 📝 String Resources
-
-**Android — String Resources:**  
-https://developer.android.com/guide/topics/resources/string-resource
-
-Use this for:
-
-```text
-<string>
-
-formatted Strings
-
-placeholders
-
-plurals
-```
-
----
-
-## 🎨 Compose Resources
-
-**Android — Resources in Compose:**  
-https://developer.android.com/develop/ui/compose/resources
-
-Focus on using Android resources from Jetpack Compose rather than hardcoded UI Strings.
-
----
-
-
-The key principle is:
-
-```text
-Compose requests a String resource
--> Android decides which translation to provide
-```
-
-Your UI should not be responsible for manually translating itself.
-
-That separation makes the application easier to maintain and allows additional languages to be added without rewriting every screen.
+[Android — Resources in Jetpack Compose](https://developer.android.com/develop/ui/compose/resources?)
